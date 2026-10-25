@@ -81,6 +81,162 @@ a { color: var(--accent); }
   border-radius: 3px;
 }
 
+/* ==========================================================================
+   CLAYMORPHISM + GLASSMORPHISM LAYER
+   Clay: soft double shadows (light above, dark below) that make surfaces feel
+   pressed from soft clay. Glass: translucent panels over the paper backdrop
+   with a blurred backdrop and a hairline light edge. Both honor dark mode.
+   ========================================================================== */
+
+:root {
+  /* clay shadows — light theme */
+  --clay-shadow:
+    8px 8px 16px rgba(174, 158, 128, 0.35),
+    -8px -8px 16px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.7),
+    inset -1px -1px 2px rgba(174, 158, 128, 0.18);
+  --clay-shadow-sm:
+    4px 4px 8px rgba(174, 158, 128, 0.3),
+    -4px -4px 8px rgba(255, 255, 255, 0.85),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+  --clay-pressed:
+    inset 4px 4px 8px rgba(174, 158, 128, 0.3),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+  /* glass surface */
+  --glass-bg: rgba(255, 251, 242, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: 14px;
+  --motion-fast: 0.16s;
+  --motion-base: 0.28s;
+}
+
+[data-theme='dark'] {
+  --clay-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.55),
+    -6px -6px 14px rgba(56, 74, 99, 0.35),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.06),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.35);
+  --clay-shadow-sm:
+    4px 4px 8px rgba(0, 0, 0, 0.45),
+    -3px -3px 8px rgba(56, 74, 99, 0.3),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.05);
+  --clay-pressed:
+    inset 4px 4px 8px rgba(0, 0, 0, 0.5),
+    inset -3px -3px 8px rgba(56, 74, 99, 0.3);
+  --glass-bg: rgba(24, 31, 43, 0.55);
+  --glass-border: rgba(148, 163, 184, 0.22);
+}
+
+/* clay cards: the main panels */
+.card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--clay-shadow);
+}
+
+/* clay buttons: raised at rest, pressed-in on active */
+.btn {
+  box-shadow: var(--clay-shadow-sm);
+  transition:
+    transform var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    filter var(--motion-fast) ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--clay-pressed);
+}
+
+/* event-type cards: clay tiles; selected looks pressed-in with accent */
+.event-type-card {
+  box-shadow: var(--clay-shadow-sm);
+  transition:
+    transform var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    border-color var(--motion-fast) ease;
+}
+.event-type-card:hover { transform: translateY(-2px); }
+.event-type-card:active { box-shadow: var(--clay-pressed); transform: translateY(0); }
+.event-type-card[aria-checked='true'] {
+  box-shadow: var(--clay-pressed);
+  border-color: var(--accent);
+}
+.event-type-card[aria-checked='true'] .mark { color: var(--accent); }
+
+/* stat strip: each cell is a soft clay tile */
+.stat-card {
+  box-shadow: var(--clay-shadow-sm);
+  border-radius: var(--radius);
+  margin: calc(var(--space) * 1);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.stat-grid {
+  border: none;
+  margin-bottom: calc(var(--space) * 4);
+  gap: calc(var(--space) * 0.5);
+}
+.stat-card:last-child { border-right: 1px solid var(--glass-border); }
+
+/* inputs: pressed-in clay wells */
+.form-field input {
+  box-shadow: var(--clay-pressed);
+  transition: box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+.form-field input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: var(--clay-pressed), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* tabs: pill-clay; active is pressed */
+[role='tab'] {
+  border-radius: 999px;
+  margin: 0 calc(var(--space) * 0.5) calc(var(--space) * 1) 0;
+  border: 1px solid transparent;
+  box-shadow: var(--clay-shadow-sm);
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+[role='tab']:hover { transform: translateY(-1px); }
+[role='tab'][aria-selected='true'] {
+  background: var(--surface);
+  border-color: var(--rule);
+  box-shadow: var(--clay-pressed);
+}
+[role='tab'][data-accent='true'][aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+
+/* entrance animation: gentle rise, staggered per card */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card { animation: rise-in var(--motion-base) ease-out both; }
+.stat-card { animation: rise-in var(--motion-base) ease-out both; }
+.stat-card:nth-child(2) { animation-delay: 0.04s; }
+.stat-card:nth-child(3) { animation-delay: 0.08s; }
+.stat-card:nth-child(4) { animation-delay: 0.12s; }
+
+/* hover lift on cue rows and idea cards for orientation without distraction */
+.cue-row, .stat-card { transition: box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease; }
+.cue-row:hover { box-shadow: var(--clay-shadow-sm); border-radius: var(--radius); }
+
+/* keep reduced-motion users unaffected */
+@media (prefers-reduced-motion: reduce) {
+  .card, .stat-card { animation: none; }
+  .btn, .event-type-card, [role='tab'], .cue-row { transition: none; }
+  .btn:hover:not(:disabled), .event-type-card:hover, [role='tab']:hover { transform: none; }
+}
+
 .skip-link {
   position: absolute;
   left: -9999px;
