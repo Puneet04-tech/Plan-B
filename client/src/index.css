@@ -259,11 +259,18 @@ a { color: var(--accent); }
 .app-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;   /* actions row centers vertically against the logo */
   gap: calc(var(--space) * 3);
   padding: 0 0 calc(var(--space) * 3);
   border-bottom: 1px solid var(--rule);
   margin-bottom: calc(var(--space) * 4);
+}
+
+/* Logo + tagline sit on their own baseline as a single unit */
+.logo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .logo-word {
@@ -271,16 +278,20 @@ a { color: var(--accent); }
   font-weight: 700;
   font-size: clamp(1.8rem, 1.5rem + 1.2vw, 2.4rem);
   color: var(--ink);
+  line-height: 1.05;
 }
 
 .tagline {
   color: var(--muted);
   font-size: 0.9rem;
   font-style: italic;
+  /* align the tagline with the optical left edge of the serif headline */
+  padding-left: 0.08em;
 }
 
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: calc(var(--space) * 1.5);
   margin-left: auto;
   align-items: center;
