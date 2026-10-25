@@ -34,7 +34,7 @@ const PlanBPanel = ({ plan }: Props) => {
 
   return (
     <div className="diff-panel">
-      <h2 style={{ color: 'var(--alert)' }}>Plan B — the replanning control room</h2>
+      <h2 style={{ color: 'var(--accent)' }}>Plan B — the replanning control room</h2>
       <p style={{ margin: '0.5rem 0 1rem' }}>
         {plan
           ? 'Pick a scenario to see the full before/after diff: budget deltas, moved and added tasks, warnings.'

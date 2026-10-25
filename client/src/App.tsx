@@ -5,6 +5,7 @@ import type { PlanBundle, PlanRequest } from '@shared/types';
 import { fetchPlan, fetchIdeas } from './lib/api';
 import type { IdeasResponse } from '@shared/types';
 import { t, type Lang } from './lib/i18n';
+import { useTheme } from './lib/theme';
 import EventForm from './components/EventForm';
 import StatCards from './components/StatCards';
 import ResultTabs from './components/ResultTabs';
@@ -15,6 +16,7 @@ type TopTab = 'planner' | 'simulator';
 const App = () => {
   const [topTab, setTopTab] = useState<TopTab>('planner');
   const [lang, setLang] = useState<Lang>('en');
+  const [theme, toggleTheme] = useTheme();
   const strings = t(lang);
   const [plan, setPlan] = useState<PlanBundle | null>(null);
   const [ideas, setIdeas] = useState<IdeasResponse | null>(null);
@@ -75,6 +77,14 @@ const App = () => {
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="lang-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+            aria-pressed={theme === 'dark'}
+          >
+            {theme === 'light' ? 'Dark' : 'Light'}
+          </button>
+          <button
+            className="lang-toggle"
             onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
             aria-label={lang === 'en' ? 'Switch language to Hindi' : 'भाषा बदलें — अंग्रेज़ी'}
           >
@@ -131,7 +141,7 @@ const App = () => {
                 {!loading && error && (
                   <div className="card" role="alert">
                     <h2>Something went wrong</h2>
-                    <p style={{ color: 'var(--alert)' }}>{error}</p>
+                    <p style={{ color: 'var(--accent)' }}>{error}</p>
                     <button className="btn btn-primary" onClick={retry} style={{ marginTop: '1rem', width: 'auto' }}>
                       {strings.retry}
                     </button>

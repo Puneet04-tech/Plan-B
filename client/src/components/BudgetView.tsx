@@ -110,7 +110,7 @@ const BudgetView = ({ plan }: Props) => {
                     aria-label={`Actual spend for ${line.label}`}
                     value={actual ?? ''}
                     onChange={(e) => onActualChange(line.key, e.target.value)}
-                    style={{ width: 110, minHeight: 44, padding: '0.4rem', border: '1.5px solid var(--border)', borderRadius: 6, background: 'var(--surface)', color: 'var(--text)' }}
+                    style={{ width: 110, minHeight: 44, padding: '0.4rem', border: '1.5px solid var(--rule)', borderRadius: 6, background: 'var(--surface)', color: 'var(--ink)' }}
                   />
                 </td>
                 <td>

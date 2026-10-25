@@ -79,7 +79,7 @@ const VendorsView = ({ plan }: Props) => {
                   value={item.status}
                   onChange={(e) => update(item.id, { status: e.target.value as VendorStatus })}
                   aria-label={`Status for ${item.category}`}
-                  style={{ minHeight: 44, padding: '0.3rem', border: '1.5px solid var(--border)', borderRadius: 6, background: 'var(--surface)', color: 'var(--text)' }}
+                  style={{ minHeight: 44, padding: '0.3rem', border: '1.5px solid var(--rule)', borderRadius: 6, background: 'var(--surface)', color: 'var(--ink)' }}
                 >
                   {STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -104,7 +104,7 @@ const VendorsView = ({ plan }: Props) => {
                   onChange={(e) => update(item.id, { notes: e.target.value })}
                   aria-label={`Contact notes for ${item.category}`}
                   placeholder="Phone, quotes…"
-                  style={{ width: 130, minHeight: 44, padding: '0.4rem', border: '1.5px solid var(--border)', borderRadius: 6, background: 'var(--surface)', color: 'var(--text)' }}
+                  style={{ width: 130, minHeight: 44, padding: '0.4rem', border: '1.5px solid var(--rule)', borderRadius: 6, background: 'var(--surface)', color: 'var(--ink)' }}
                 />
               </td>
             </tr>

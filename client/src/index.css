@@ -1,15 +1,22 @@
 /* Plan B — "printed event run-of-show" editorial theme.
-   Tokens are the single source of truth. No gradients, no glow, no purple. */
+   Tokens are the single source of truth. No gradients, no glow, no purple,
+   no pure black — the dark theme is premium slate/obsidian. Default: light. */
 
 :root {
-  --paper: #F6F0E4;
-  --surface: #FFFBF2;
+  /* Light theme (warm cream) */
+  --paper: #F6F0E4;       /* app canvas */
+  --surface: #FFFBF2;     /* panels */
+  --bg-input: #FFFFFF;    /* sunken form fields */
   --ink: #1B1A17;
   --muted: #5E584B;
   --rule: #D9CFBC;
-  --accent: #C42B16;     /* 5.2:1 on --paper; used for buttons, links, Plan B tab */
-  --highlight: #F2B531;  /* marker highlight for changed/new diff values only */
+  --accent: #C42B16;      /* 5.2:1 on --paper; buttons, links, Plan B tab */
+  --accent-on: #FFFFFF;   /* text on accent surfaces */
+  --highlight: #F2B531;   /* marker highlight for changed/new diff values only */
+  --highlight-ink: #1B1A17;
   --ok: #2F6B4F;
+  --pill-bg: #E0F2FE;
+  --pill-ink: #0369A1;
   --radius: 7px;
   --space: 0.5rem; /* 8pt */
   --font-heading: 'Fraunces', 'Instrument Serif', Georgia, serif;
@@ -18,16 +25,22 @@
   --maxw: 1200px;
 }
 
-/* Dark mode is OFF by default; only applied via [data-theme='dark'] */
+/* Premium dark: slate + midnight obsidian. Applied via [data-theme='dark'];
+   default stays light. No pure blacks anywhere. */
 [data-theme='dark'] {
-  --paper: #211E19;
-  --surface: #2A261F;
-  --ink: #F1EAD9;
-  --muted: #B8AE97;
-  --rule: #453E30;
-  --accent: #FF7A5C; /* same warm family, lighter for dark contrast */
+  --paper: #0F141C;       /* ground-level deep obsidian canvas */
+  --surface: #181F2B;     /* elevated mid-tone slate panels */
+  --bg-input: #121822;    /* sunken inputs, darker than panels */
+  --ink: #F8FAFC;         /* off-white reading layer, avoids glare */
+  --muted: #94A3B8;       /* cool steel gray */
+  --rule: #283548;        /* low-glow structural lines; borders carry separation */
+  --accent: #F97316;      /* calibrated vivid rust-orange for dark visibility */
+  --accent-on: #0F141C;   /* max-clarity text on accent */
   --highlight: #F2B531;
+  --highlight-ink: #0F141C;
   --ok: #7CC9A0;
+  --pill-bg: #0C4A6E;     /* muted sapphire capsule */
+  --pill-ink: #38BDF8;    /* electric sky-blue marker */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,6 +52,7 @@ body {
   line-height: 1.55;
   background: var(--paper);
   color: var(--ink);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3 {
@@ -170,7 +184,7 @@ a { color: var(--accent); }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   font: inherit;
-  background: var(--surface);
+  background: var(--bg-input);
   color: var(--ink);
   min-height: 44px;
 }
@@ -242,10 +256,11 @@ a { color: var(--accent); }
 
 .btn-primary {
   background: var(--accent);
-  color: var(--surface);
+  color: var(--accent-on);
   width: 100%;
 }
-.btn-primary:hover:not(:disabled) { background: #A82410; }
+.btn-primary:hover:not(:disabled) { filter: brightness(0.92); }
+[data-theme='dark'] .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
 
 .btn-ghost {
   background: var(--surface);
@@ -408,7 +423,7 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 .redline-new {
   background: var(--highlight);
-  color: var(--ink);
+  color: var(--highlight-ink);
   padding: 0 0.25rem;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
