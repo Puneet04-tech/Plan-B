@@ -1,235 +1,146 @@
-# Plan B - Event Planning Assistant
+# Plan B — Event Planning Assistant
 
-## Overview
+> *"Celebration meets Control Room"* — realistic plans that replan instantly when things go wrong.
 
-Plan B is an AI-powered event planning assistant that helps users organize weddings, birthdays, and community events with realistic budgets, timelines, vendor checklists, and personalized ideas. Unlike static planners, Plan B creates a realistic plan that instantly adapts when disruptions occur.
+## Problem statement
 
-## Features
+Create a GenAI-powered planning assistant that helps users organize weddings, birthdays, and community events with budgets, timelines, vendor checklists, and personalized ideas.
 
-### Core Planning
-- **Budget Engine**: Deterministic budget allocation with realism checks
-- **Timeline Engine**: Critical-path scheduling backward from event date
-- **Disruption Simulator**: Preset disruptions (venue cancelled, rain, budget cuts, etc.) with before/after diff
-- **Vendor Checklists**: Per-category checklists with backup vendors for high-risk items
-- **Personalized Ideas**: LLM-powered themes, decor, menu, and activities
+**Plan B's differentiator:** it builds a realistic plan, then **replans instantly** when something goes wrong — venue cancelled, rain, guest-count jump, budget cut, vendor no-show — with a full before/after diff.
 
-### Disruption Scenarios
-- Venue cancelled (requires backup venue, 50% cost increase)
-- Bad weather (move indoors, 20% cost increase, 7-day delay)
-- Guest count increase (30% more guests, 30% budget increase)
-- Budget cut (20% reduction, timeline adjustments)
-- Vendor no-show (21-day delay, 20K cost penalty)
+## Core rule: the LLM never produces numbers or dates
 
-### User Interface
-- Clean, accessible React frontend with TypeScript
-- Responsive design for desktop and mobile
-- Tab-based navigation between planner and disruption simulator
-- Real-time plan generation with Zod validation
+All money, dates, task order and totals come from deterministic, unit-tested code in `server/src/engine/`. The LLM (Cloudflare Workers AI) only writes creative ideas. Its output is:
+
+1. Validated with Zod,
+2. **Cap-checked server-side** against budget lines computed by the budget engine (ideas that exceed a category cap are dropped or trimmed),
+3. Labeled `source: "ai"` or `source: "fallback"` so the UI can show provenance.
+
+The user's theme text goes into a clearly delimited `<<<DATA … >>>` block and the system prompt states it is data, not instructions; control characters and injection-like patterns are stripped.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  subgraph client["React client (:5173)"]
+    form[Event form] --> api[lib/api.ts]
+    ui[Stat cards · Budget donut · Timeline stepper · Vendor checklist · Ideas · Plan B diff]
+  end
+  subgraph server["Express server (:3000)"]
+    routes[Routes + Zod validation + rate limit] --> engines
+    subgraph engines["Deterministic engines (pure, tested)"]
+      budget[Budget] --- sched[Scheduler] --- vend[Vendors] --- disr[Disruptions]
+    end
+    routes --> llm[LLM provider factory]
+    llm --> cf[Cloudflare Workers AI]
+    llm --> fb[Fallback provider]
+  end
+  api -->|/api/plan /api/ideas /api/disrupt| routes
+```
+
 ```
 plan-b/
-├── server/              # Node.js API with Express
+├── shared/types.ts           # single API contract for client + server
+├── server/
 │   ├── src/
-│   │   ├── engine/      # budget.ts, scheduler.ts, disruptions.ts
-│   │   ├── llm/         # ideas.ts (LLM integration)
-│   │   ├── routes/      # API endpoints
-│   │   ├── validation/  # Zod schemas
-│   │   └── data/        # templates
-│   ├── package.json
-│   └── tsconfig.json
-├── client/              # React frontend
-│   ├── src/
-│   │   ├── components/  # EventForm, DisruptionPanel
-│   │   ├── App.tsx
-│   │   ├── index.tsx
-│   │   └── index.css
-│   ├── package.json
-│   └── vite.config.ts
-├── tests/               # Unit tests
-│   ├── budget.test.ts
-│   ├── scheduler.test.ts
-│   └── disruptions.test.ts
-├── .env.example
-├── .gitignore
-└── README.md
+│   │   ├── engine/           # budget.ts, scheduler.ts, vendors.ts, disruptions.ts
+│   │   ├── data/             # ranges.ts (assumptions), vendors.ts (checklist data)
+│   │   ├── llm/              # provider.ts, cloudflare.ts, fallback.ts, factory.ts
+│   │   ├── validation/       # Zod schemas (injection-safe)
+│   │   └── routes/           # /api/plan /api/ideas /api/disrupt /api/health
+│   └── src/app.ts            # helmet, CORS, JSON limit, rate limits
+├── client/
+│   └── src/
+│       ├── components/       # EventForm, StatCards, ResultTabs, Budget/Timeline/Vendors/Ideas views, DisruptionPanel
+│       ├── lib/              # api.ts, vendorStorage.ts, i18n.ts
+│       └── index.css         # design tokens (single source of truth)
+└── tests/                    # Vitest: budget, scheduler, disruptions+vendors (46 tests)
 ```
 
-## API Endpoints
+## Feature → scoring mapping
+
+| Requirement | Where |
+|---|---|
+| Code quality | Strict TS, shared types module, pure engines, no dead code |
+| Security | helmet, strict CORS, JSON body limit, rate limits, Zod on every request + LLM output, API keys server-side only, no stack traces in errors, no `dangerouslySetInnerHTML` |
+| Efficiency | Only `/api/ideas` calls the LLM; engines run in ms; in-memory LRU cache with TTL on ideas; Vite proxy keeps CORS zero-cost |
+| Testing | 46 Vitest tests on engines (template sums, exact reconciliation, rush boundaries, leap years, contingency-first trims, determinism) |
+| Accessibility | Skip link, semantic landmarks, ARIA tabs with arrow keys, radio group for event type, `aria-describedby` errors, aria-live regions, 44px touch targets, `prefers-reduced-motion`, print stylesheet |
+| Problem alignment | All three event types, four core deliverables, five disruption scenarios with typed diffs |
+
+## API contract (all typed via `shared/types.ts`)
 
 ### POST /api/plan
-Generates a complete event plan
-**Request Body:**
 ```json
-{
-  "eventType": "wedding",
-  "eventDate": "2026-12-25",
-  "city": "Mumbai",
-  "guestCount": 100,
-  "totalBudget": 500000,
-  "theme": "Classic Elegance"
-}
+{ "eventType": "wedding", "eventDate": "2026-12-25", "city": "Mumbai", "guests": 100, "budget": 500000, "theme": "sunset garden" }
 ```
-
-**Response:** Complete plan with budget, timeline, and personalized ideas
-
-### POST /api/budget
-Generates budget plan only
-**Request Body:**
-```json
-{
-  "eventType": "wedding",
-  "guestCount": 100,
-  "totalBudget": 500000
-}
-```
-
-**Response:** Budget breakdown with realism checks
-
-### POST /api/timeline
-Generates timeline only
-**Request Body:**
-```json
-{
-  "eventType": "wedding",
-  "eventDate": "2026-12-25",
-  "guestCount": 100,
-  "totalBudget": 500000
-}
-```
-
-**Response:** Scheduled tasks with critical path
-
-### POST /api/disrupt
-Applies disruption and shows impact
-**Request Body:**
-```json
-{
-  "eventType": "wedding",
-  "guestCount": 100,
-  "totalBudget": 500000,
-  "disruptionType": "venue_cancelled"
-}
-```
-
-**Response:** Before/after diff with recommendations
+→ `{ success, data: { setup, budget, timeline, vendors, readiness } }` — **no LLM**, instant.
 
 ### POST /api/ideas
-Generates personalized ideas
-**Request Body:**
-```json
-{
-  "eventType": "wedding",
-  "guestCount": 100,
-  "totalBudget": 500000,
-  "city": "Mumbai",
-  "theme": "Classic Elegance"
-}
+Same body → `{ success, data: { ideas: { themeConcept, items[] }, source: "ai" | "fallback" } }`.
+Every item carries `category` (mapped to a budget line), `estimatedCost`, `fitsBudget`.
+
+### POST /api/disrupt
+`{ plan, scenario }` where scenario ∈ `venue-cancelled | rain | guest-count-up-30 | budget-cut-20 | vendor-no-show-caterer`
+→ `{ success, data: { plan, diff } }` with `diff = { before, after, budgetChanges[], taskChanges[], addedTasks[], warnings[], infeasible }`. Totals always reconcile exactly.
+
+## Setup and run
+
+```bash
+# 1. install
+cd server && npm install
+cd ../client && npm install
+
+# 2. environment
+cp .env.example server/.env
+#   fill CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID for live AI
+#   (the app works without them — curated fallback ideas are used)
+
+# 3. run (two terminals)
+cd server && npm run dev        # API on :3000
+cd client && npm run dev        # UI on :5173 (proxies /api)
 ```
 
-**Response:** Themes, decor, menu, and activities
+## Tests
 
-## Technology Stack
+```bash
+cd server
+npx vitest run --root ..        # runs tests/ against src
+npm run build                   # type-check + emit
+```
 
-| Layer | Technology | Reason |
-|-------|------------|--------|
-| Frontend | React + Vite + TypeScript | Fast, component-based, typed code |
-| Backend | Node.js + Express + TypeScript | Keeps API keys server-side |
-| Validation | Zod | Strong input/output validation |
-| Testing | Vitest | Unit tests for engines and API |
-| Styling | Tailwind CSS + CSS | Accessible by design |
+Coverage targets engine correctness: budget templates sum to exactly 100 incl. contingency; lines sum exactly to awkward totals (₹499,999); realism verdict boundaries; rush mode triggers at 12 days but not 90; past dates rejected; dependency order preserved; month/leap-year boundaries; all five disruptions reconcile exactly with contingency-first spending and a deterministic trim order.
 
-## Build Plan
+## Env variables
 
-1. **Core Engines First** (Weighted heavily)
-   - Budget engine with tests
-   - Timeline engine with tests
-   - Disruption engine with tests
+| Variable | Required | Purpose |
+|---|---|---|
+| `PORT` | no (default 3000) | API port |
+| `ALLOWED_ORIGIN` | no (default :5173) | CORS origin |
+| `CLOUDFLARE_API_TOKEN` | for live AI | Workers AI token (server-side only) |
+| `CLOUDFLARE_ACCOUNT_ID` | for live AI | Cloudflare account id |
+| `CLOUDFLARE_AI_MODEL` | no | Override model (default `@cf/meta/llama-3.1-8b-instruct`) |
 
-2. **API Layer**
-   - Express routes with Zod validation
-   - Error handling and health checks
+## Assumptions (editable in `server/src/data/ranges.ts`)
 
-3. **LLM Integration**
-   - Gemini API integration
-   - Fallback to curated templates
+- **Per-guest realism ranges (INR):** community 300–1500, birthday 800–3000, wedding 1500–6000. These drive the tight/comfortable/generous verdict and are deliberately starting values.
+- **Rush premium:** +15% on venue/catering when a disruption forces an emergency booking.
+- **Trim order** when budget must be freed: promotion → activities → decor → soundLights → entertainment (contingency is consumed first, before any trim).
 
-4. **Frontend**
-   - Event form with validation
-   - Plan display with tabs
-   - Disruption simulator
+## Limitations
 
-5. **Polish**
-   - README with examples
-   - Environment configuration
-   - Final testing
+- Vendor data is template-based, not a live vendor marketplace.
+- Realism ranges are assumptions, not market research.
+- The idea cache is in-memory per server process (no persistence).
+- Hindi i18n covers labels only; engine output strings are English.
 
-## Security
+## 2-minute demo script
 
-- API keys in `.env` (never in code)
-- Zod validation for all inputs and outputs
-- Rate limiting (to be implemented)
-- Input sanitization
-
-## Testing
-
-All core components are tested:
-- Budget allocation correctness
-- Timeline critical path logic
-- Disruption impact calculations
-- API request/response validation
-
-## Running Development
-
-1. Install dependencies in both `server` and `client` directories:
-   ```bash
-   cd server && npm install
-   cd client && npm install
-   ```
-
-2. Start the API server:
-   ```bash
-   cd server
-   npm run dev
-   ```
-
-3. Start the frontend:
-   ```bash
-   cd client
-   npm run dev
-   ```
-
-4. Open http://localhost:5173 in your browser
-
-## Sample Event
-
-Try a wedding event with these parameters:
-- Event Type: Wedding
-- Date: 2026-12-25 (Christmas Day)
-- City: Mumbai
-- Guests: 100
-- Budget: ₹500,000
-
-This will generate a comprehensive plan with venue booking, catering, photography, entertainment, and more, complete with backup vendors and disruption scenarios.
-
-## Future Enhancements
-
-- Multi-language support (English + Hindi)
-- PDF export functionality
-- Advanced AI for theme generation
-- Social media integration
-- Budget tracking over time
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes
-4. Add tests for new functionality
-5. Follow existing code style
-6. Submit a pull request
-
-Plan B aims to revolutionize event planning by providing realistic, adaptable plans that help organizers prepare for the unexpected while maintaining budget and timeline integrity.
-
-Get-NetTCPConnection -LocalPort 3000,5173 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue; Write-Output "Stopped PID $_" }; Start-Sleep -Seconds 2; $listen = Get-NetTCPConnection -LocalPort 3000,5173 -State Listen -ErrorAction SilentlyContinue; if (-not $listen) { Write-Output 'No listeners remaining on ports 3000 and 5173.' } else { $listen | Select-Object LocalPort,OwningProcess | Format-Table -AutoSize }
+1. Open the app → wedding, Mumbai, 100 guests, ₹500,000, ~2 months out → **Generate Plan**.
+2. Point at the four stat cards: budget, per-guest realism chip, days-left, readiness.
+3. **Budget tab:** donut + table; no category dominates; catering shows per-guest.
+4. **Timeline tab:** sorted stepper, dates like "6 Nov 2026", critical path badge, check off a task → progress bar.
+5. **Vendors tab:** questions, documents, advance guidance, backup flags on venue/caterer, community compliance notes.
+6. **Ideas tab:** AI ideas with fit badges (or "offline suggestions" without a key).
+7. **Plan B tab (the hero):** click *Venue cancelled* → before/after diff: contingency consumed first, rush premium, "Book replacement venue" task added within 2 days, warnings if infeasible. Click *Budget cut 20%* → exactly what was cut, by how much, in a documented order.
+8. Switch to Hindi, hit Print/Export, done.

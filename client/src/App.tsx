@@ -74,20 +74,18 @@ const App = () => {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
-            className="btn"
-            style={{ width: 'auto', background: 'var(--surface)', color: 'var(--primary)', border: '1.5px solid var(--border)', padding: '0.5rem 1rem' }}
+            className="lang-toggle"
             onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
-            aria-label={lang === 'en' ? 'Switch to Hindi' : 'अंग्रेज़ी में बदलें'}
+            aria-label={lang === 'en' ? 'Switch language to Hindi' : 'भाषा बदलें — अंग्रेज़ी'}
           >
-            {lang === 'en' ? 'हिं' : 'EN'}
+            <span aria-hidden="true">Language: </span>{lang === 'en' ? 'हिं' : 'EN'}
           </button>
           <button
-            className="btn"
-            style={{ width: 'auto', background: 'var(--surface)', color: 'var(--primary)', border: '1.5px solid var(--border)', padding: '0.5rem 1rem' }}
+            className="btn btn-ghost"
             onClick={() => window.print()}
             title={strings.exportHint}
           >
-            🖨 {strings.print}
+            {strings.print}
           </button>
           <nav aria-label="Primary">
           <div role="tablist" aria-label="Sections">
@@ -140,12 +138,7 @@ const App = () => {
                   </div>
                 )}
                 {!loading && !error && !plan && (
-                  <div className="card">
-                    <h2>{strings.welcome}</h2>
-                    <p style={{ color: 'var(--muted)' }}>
-                      {strings.welcomeBody}
-                    </p>
-                  </div>
+                  <SamplePreview />
                 )}
                 {!loading && !error && plan && (
                   <>
@@ -169,3 +162,49 @@ const App = () => {
 };
 
 export default App;
+
+/** Greyed sample plan shown before the first real generation. */
+function SamplePreview() {
+  return (
+    <div className="sample-plan" aria-hidden="true">
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-label">Total budget</div>
+          <div className="stat-value money">₹3,00,000</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Per guest</div>
+          <div className="stat-value money">₹3,000 <span className="chip chip-ok">COMFORTABLE</span></div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Days left</div>
+          <div className="stat-value num">30</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Readiness</div>
+          <div className="stat-value num">0%</div>
+        </div>
+      </div>
+      <div className="card">
+        <h2>Sample run of show</h2>
+        <ul className="cue-sheet">
+          <li className="cue-row" data-critical="true">
+            <span className="cue-date">24 Nov 2026</span>
+            <span className="cue-task">Get event permissions</span>
+            <span className="status-label">UPCOMING</span>
+          </li>
+          <li className="cue-row">
+            <span className="cue-date">26 Nov 2026</span>
+            <span className="cue-task">Promote the event</span>
+            <span className="status-label">UPCOMING</span>
+          </li>
+          <li className="cue-row" data-critical="true">
+            <span className="cue-date">25 Dec 2026</span>
+            <span className="cue-task">Event day</span>
+            <span className="status-label">UPCOMING</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}

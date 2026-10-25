@@ -14,38 +14,43 @@ interface Props {
 
 const formatINR = (n: number): string => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
-const VERDICT_CHIP: Record<string, { className: string; label: string }> = {
-  tight: { className: 'chip chip-alert', label: 'Tight' },
-  comfortable: { className: 'chip chip-success', label: 'Comfortable' },
-  generous: { className: 'chip chip-warn', label: 'Generous' },
+// Verdict chips carry text labels; the reasoning is spelled out in the tooltip.
+const VERDICT_LABEL: Record<string, string> = {
+  tight: 'TIGHT',
+  comfortable: 'COMFORTABLE',
+  generous: 'ROOMY',
 };
 
 const StatCards = ({ plan, strings }: Props) => {
-  const verdict = VERDICT_CHIP[plan.budget.realism.verdict] ?? VERDICT_CHIP.comfortable;
+  const realism = plan.budget.realism;
+  const verdict = VERDICT_LABEL[realism.verdict] ?? 'COMFORTABLE';
 
   return (
     <div className="stat-grid" aria-label="Plan summary">
       <div className="stat-card">
         <div className="stat-label">{strings.totalBudget}</div>
-        <div className="stat-value">{formatINR(plan.budget.total)}</div>
+        <div className="stat-value money">{formatINR(plan.budget.total)}</div>
       </div>
       <div className="stat-card">
         <div className="stat-label">{strings.perGuest}</div>
-        <div className="stat-value">
-          {formatINR(plan.budget.realism.perGuest)}{' '}
-          <span className={verdict.className} title={plan.budget.realism.reason}>{verdict.label}</span>
+        <div className="stat-value money">
+          {formatINR(realism.perGuest)}{' '}
+          <span className={`chip ${realism.verdict === 'tight' ? 'chip-alert' : 'chip-ok'}`} title={realism.reason}>
+            {verdict}
+          </span>
         </div>
+        <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{realism.reason}</span>
       </div>
       <div className="stat-card">
         <div className="stat-label">{strings.daysLeft}</div>
-        <div className="stat-value">
+        <div className="stat-value num">
           {plan.timeline.daysAvailable}{' '}
-          {plan.timeline.rushMode && <span className="chip chip-alert">Rush</span>}
+          {plan.timeline.rushMode && <span className="chip chip-alert">RUSH</span>}
         </div>
       </div>
       <div className="stat-card">
         <div className="stat-label">{strings.readiness}</div>
-        <div className="stat-value">{plan.readiness.score}%</div>
+        <div className="stat-value num">{plan.readiness.score}%</div>
       </div>
     </div>
   );

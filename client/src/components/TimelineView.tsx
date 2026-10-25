@@ -3,10 +3,11 @@
 import { useMemo, useState } from 'react';
 import type { PlanBundle, TaskStatus } from '@shared/types';
 
-const STATUS_META: Record<TaskStatus, { label: string; className: string; icon: string }> = {
-  overdue: { label: 'Overdue', className: 'chip chip-alert', icon: '⚠' },
-  'due-soon': { label: 'Due soon', className: 'chip chip-warn', icon: '⏳' },
-  upcoming: { label: 'Upcoming', className: 'chip chip-success', icon: '→' },
+// Cue-sheet: status conveyed by text label + icon, never color alone.
+const STATUS_META: Record<TaskStatus, { label: string; icon: string }> = {
+  overdue: { label: 'OVERDUE', icon: '⚠' },
+  'due-soon': { label: 'DUE SOON', icon: '⏳' },
+  upcoming: { label: 'UPCOMING', icon: '→' },
 };
 
 interface Props {
@@ -23,7 +24,7 @@ const TimelineView = ({ plan }: Props) => {
 
   return (
     <div className="card">
-      <h2>Timeline</h2>
+      <h2>Run of show</h2>
       {plan.timeline.rushMessage && (
         <p className="chip chip-alert" role="status" style={{ display: 'inline-block', margin: '0.5rem 0 1rem' }}>
           {plan.timeline.rushMessage}
@@ -37,43 +38,40 @@ const TimelineView = ({ plan }: Props) => {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Task completion"
-          style={{ height: 10, background: 'var(--border)', borderRadius: 999, overflow: 'hidden' }}
+          style={{ height: 8, background: 'var(--rule)', borderRadius: 3, overflow: 'hidden' }}
         >
-          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--success)', transition: 'width 0.3s ease' }} />
+          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--ok)' }} />
         </div>
-        <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{progress}% complete</span>
+        <span className="num" style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{progress}% complete</span>
       </div>
 
-      <ul className="stepper">
+      <ul className="cue-sheet" aria-label="Task cue sheet">
         {plan.timeline.tasks.map((task) => {
           const meta = STATUS_META[task.status];
           return (
             <li
               key={task.id}
+              className="cue-row"
               data-status={task.status}
               data-critical={task.isOnCriticalPath}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span className="cue-date">{task.displayDate}</span>
+              <span className="cue-task">
                 <input
                   type="checkbox"
                   id={`task-${task.id}`}
                   checked={!!done[task.id]}
                   onChange={(e) => setDone((prev) => ({ ...prev, [task.id]: e.target.checked }))}
                   aria-label={`Mark "${task.title}" done`}
-                  style={{ width: 20, height: 20 }}
+                  style={{ width: 18, height: 18, verticalAlign: '-3px', marginRight: '0.5rem' }}
                 />
-                <label htmlFor={`task-${task.id}`} style={{ fontWeight: 600, cursor: 'pointer' }}>
-                  {task.title}
-                </label>
-                {task.isOnCriticalPath && <span className="chip chip-warn">Critical path</span>}
-                <span className={meta.className}>
-                  <span aria-hidden="true">{meta.icon} </span>
-                  {meta.label}
-                </span>
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                {task.displayDate} · {task.category}
-              </div>
+                <label htmlFor={`task-${task.id}`} style={{ cursor: 'pointer' }}>{task.title}</label>
+                {task.isOnCriticalPath && <span className="redline-label">critical path</span>}
+              </span>
+              <span className="status-label">
+                <span aria-hidden="true">{meta.icon} </span>
+                {meta.label}
+              </span>
             </li>
           );
         })}

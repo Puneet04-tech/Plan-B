@@ -13,13 +13,13 @@ interface Tab {
   label: string;
 }
 
-const TABS: Array<{ id: string; labelKey: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab' }> = [
+const TABS: Array<{ id: string; labelKey: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab'; accent?: boolean }> = [
   { id: 'overview', labelKey: 'overview' },
   { id: 'budget', labelKey: 'budgetTab' },
   { id: 'timeline', labelKey: 'timelineTab' },
   { id: 'vendors', labelKey: 'vendorsTab' },
   { id: 'ideas', labelKey: 'ideasTab' },
-  { id: 'planb', labelKey: 'planbTab' },
+  { id: 'planb', labelKey: 'planbTab', accent: true },
 ];
 
 interface Props {
@@ -77,6 +77,7 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
             tabIndex={active === tab.id ? 0 : -1}
             onClick={() => setActive(tab.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
+            data-accent={tab.accent || undefined}
           >
             {strings[tab.labelKey]}
           </button>

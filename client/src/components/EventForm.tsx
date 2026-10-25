@@ -8,13 +8,10 @@ import type { PlanRequest } from '@shared/types';
 
 const FormSchema = z.object({
   eventType: z.enum(['wedding', 'birthday', 'community']),
-  eventDate: z
-    .string()
-    .min(1, 'Event date is required')
-    .refine((s) => {
-      const d = new Date(`${s}T00:00:00`);
-      return !Number.isNaN(d.getTime()) && d.getTime() > Date.now();
-    }, 'Event date must be in the future'),
+  eventDate: z.string().min(1, 'Event date is required').refine((s) => {
+    const d = new Date(`${s}T00:00:00`);
+    return !Number.isNaN(d.getTime()) && d.getTime() > Date.now();
+  }, 'Event date must be in the future'),
   city: z.string().min(2, 'City must be at least 2 characters').max(60, 'Max 60 characters'),
   guests: z.number({ invalid_type_error: 'Guests must be a number' }).int().min(1, 'At least 1 guest').max(5000, 'Max 5000 guests'),
   budget: z.number({ invalid_type_error: 'Budget must be a number' }).min(1000, 'Budget must be at least ₹1,000').max(50000000, 'Budget is too large'),
@@ -23,11 +20,14 @@ const FormSchema = z.object({
 
 type FormData = z.infer<typeof FormSchema>;
 
+// Typographic marks instead of emoji.
 const EVENT_TYPES = [
-  { value: 'wedding' as const, label: 'Wedding', icon: '💍' },
-  { value: 'birthday' as const, label: 'Birthday', icon: '🎂' },
-  { value: 'community' as const, label: 'Community', icon: '🏘️' },
+  { value: 'wedding' as const, mark: 'W', label: 'Wedding' },
+  { value: 'birthday' as const, mark: 'B', label: 'Birthday' },
+  { value: 'community' as const, mark: 'C', label: 'Community' },
 ];
+
+const DEFAULT_DATE = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 interface Props {
   onGenerate: (request: PlanRequest) => void;
@@ -57,8 +57,14 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { eventType: 'wedding', guests: 100, budget: 500000 },
-    mode: 'onBlur',
+    defaultValues: {
+      eventType: 'community',
+      eventDate: DEFAULT_DATE,
+      city: 'Delhi',
+      guests: 100,
+      budget: 300000,
+    },
+    mode: 'onBlur', // errors only after blur or submit, never on first load
   });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const eventType = watch('eventType');
@@ -68,13 +74,19 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
     onGenerate(data);
   };
 
+  const LABELS: Record<string, string> = {
+    wedding: strings.wedding,
+    birthday: strings.birthday,
+    community: strings.community,
+  };
+
   return (
     <form className="card" onSubmit={handleSubmit(onSubmit)} noValidate aria-label={strings.eventDetails}>
       <h2>{strings.eventDetails}</h2>
 
       <fieldset style={{ border: 'none', marginTop: '1rem' }}>
-        <legend style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.9rem' }}>{strings.eventType}</legend>
-        <div className="event-type-group" role="radiogroup" aria-label="Event type">
+        <legend style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem' }}>{strings.eventType}</legend>
+        <div className="event-type-group" role="radiogroup" aria-label={strings.eventType}>
           {EVENT_TYPES.map((t) => (
             <button
               key={t.value}
@@ -84,12 +96,11 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
               className="event-type-card"
               onClick={() => setValue('eventType', t.value, { shouldValidate: true })}
             >
-              <span className="event-type-icon" aria-hidden="true">{t.icon}</span>
-              <span>{strings[t.value]}</span>
+              <span className="mark" aria-hidden="true">{t.mark}</span>
+              <span>{LABELS[t.value]}</span>
             </button>
           ))}
         </div>
-        {errors.eventType && <p className="field-error" id="eventType-error">{errors.eventType.message}</p>}
       </fieldset>
 
       <div className="form-field" style={{ marginTop: '1rem' }}>
@@ -109,7 +120,6 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
         <input
           id="city"
           type="text"
-          placeholder="e.g., Mumbai"
           aria-invalid={!!errors.city}
           aria-describedby={errors.city ? 'city-error' : undefined}
           {...register('city', { required: 'City is required' })}
@@ -124,6 +134,7 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
           type="number"
           min={1}
           max={5000}
+          className="num"
           aria-invalid={!!errors.guests}
           aria-describedby={errors.guests ? 'guests-error' : undefined}
           {...register('guests', { valueAsNumber: true })}
@@ -138,6 +149,7 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
           type="number"
           min={1000}
           step={1000}
+          className="num"
           aria-invalid={!!errors.budget}
           aria-describedby={errors.budget ? 'budget-error' : undefined}
           {...register('budget', { valueAsNumber: true })}
@@ -150,7 +162,6 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
         <input
           id="theme"
           type="text"
-          placeholder="e.g., Vintage Romance"
           maxLength={60}
           aria-invalid={!!errors.theme}
           aria-describedby={errors.theme ? 'theme-error' : undefined}

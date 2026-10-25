@@ -5,14 +5,26 @@ import type { DisruptionResult, PlanBundle, ScenarioType } from '@shared/types';
 import { fetchDisruption } from '../lib/api';
 
 const SCENARIOS: Array<{ id: ScenarioType; label: string }> = [
-  { id: 'venue-cancelled', label: '🏛️ Venue cancelled' },
-  { id: 'rain', label: '🌧️ Rain expected' },
-  { id: 'guest-count-up-30', label: '👥 Guests +30%' },
-  { id: 'budget-cut-20', label: '💰 Budget cut 20%' },
-  { id: 'vendor-no-show-caterer', label: '🍽️ Caterer no-show' },
+  { id: 'venue-cancelled', label: 'Venue cancelled' },
+  { id: 'rain', label: 'Rain expected' },
+  { id: 'guest-count-up-30', label: 'Guests +30%' },
+  { id: 'budget-cut-20', label: 'Budget cut 20%' },
+  { id: 'vendor-no-show-caterer', label: 'Caterer no-show' },
 ];
 
 const formatINR = (n: number): string => `₹${Math.round(n).toLocaleString('en-IN')}`;
+
+/** Redline: struck-through old value + highlighted new value + text label. */
+const Redline = ({ from, to }: { from: number; to: number }) => (
+  <>
+    <span className="redline-old">{formatINR(from)}</span>{' '}
+    <span className="redline-new">{formatINR(to)}</span>
+    <span className="redline-label">
+      was {formatINR(from)}, now {formatINR(to)} ({to >= from ? '+' : '−'}
+      {formatINR(Math.abs(to - from))})
+    </span>
+  </>
+);
 
 interface Props {
   plan: PlanBundle | null;
@@ -41,14 +53,15 @@ const DisruptionPanel = ({ plan }: Props) => {
   return (
     <div>
       <div className="diff-panel" role="region" aria-label="Disruption simulator">
-        <h2 style={{ color: 'var(--alert)' }}>Something went wrong? Plan B handles it.</h2>
-        <p style={{ margin: '0.5rem 0 1rem' }}>
-          One click replans your budget and timeline. Numbers come from the deterministic engine — never guessed.
+        <h2>Something went wrong? Plan B handles it.</h2>
+        <p style={{ margin: '0.5rem 0 1rem', color: 'var(--muted)' }}>
+          One click replans the budget and timeline. Every change is shown as a redline —
+          the old value struck through, the new value highlighted, with the amounts spelled out in text.
         </p>
 
         {!plan && (
           <p style={{ color: 'var(--muted)' }}>
-            Generate a plan in the Event Planner tab first, then come back here to simulate disruptions.
+            Generate a plan in the Event Planner first, then simulate disruptions here.
           </p>
         )}
 
@@ -67,36 +80,27 @@ const DisruptionPanel = ({ plan }: Props) => {
           </div>
         )}
 
-        {error && (
-          <p className="field-error" role="alert" style={{ marginTop: '1rem' }}>{error}</p>
-        )}
+        {error && <p className="field-error" role="alert" style={{ marginTop: '1rem' }}>{error}</p>}
       </div>
 
       {result && (
         <div className="card" style={{ marginTop: '1.5rem' }} aria-live="polite">
-          <h2>{result.diff.label} — impact</h2>
+          <h2>{result.diff.label} — redline diff</h2>
 
-          <div className="stat-grid">
-            <div className="stat-card">
-              <div className="stat-label">Before</div>
-              <div className="stat-value">{formatINR(result.diff.before)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">After</div>
-              <div className="stat-value">{formatINR(result.diff.after)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Change</div>
-              <div className={`stat-value ${result.diff.after >= result.diff.before ? 'delta-up' : 'delta-down'}`}>
-                {result.diff.after >= result.diff.before ? '+' : ''}
-                {formatINR(result.diff.after - result.diff.before)}
-              </div>
-            </div>
-          </div>
+          <p style={{ margin: '0.75rem 0' }}>
+            Total:{' '}
+            <span className="redline-old">{formatINR(result.diff.before)}</span>{' '}
+            <span className="redline-new">{formatINR(result.diff.after)}</span>
+            <span className="redline-label">
+              was {formatINR(result.diff.before)}, now {formatINR(result.diff.after)} (
+              {result.diff.after >= result.diff.before ? '+' : '−'}
+              {formatINR(Math.abs(result.diff.after - result.diff.before))})
+            </span>
+          </p>
 
           {result.diff.infeasible && (
             <p className="chip chip-alert" role="alert" style={{ display: 'inline-block', marginBottom: '1rem' }}>
-              Plan may be infeasible — see warnings
+              Plan may be infeasible — see warnings below
             </p>
           )}
 
@@ -104,16 +108,15 @@ const DisruptionPanel = ({ plan }: Props) => {
             <>
               <h3>Budget changes</h3>
               <table>
-                <caption>Every adjusted budget line with its reason.</caption>
+                <caption>Every adjusted budget line, old vs new with the reason.</caption>
                 <thead>
-                  <tr><th scope="col">Category</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Reason</th></tr>
+                  <tr><th scope="col">Category</th><th scope="col">Change</th><th scope="col">Reason</th></tr>
                 </thead>
                 <tbody>
                   {result.diff.budgetChanges.map((c, i) => (
                     <tr key={i}>
                       <td>{c.category}</td>
-                      <td>{formatINR(c.from)}</td>
-                      <td>{formatINR(c.to)}</td>
+                      <td><Redline from={c.from} to={c.to} /></td>
                       <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{c.reason}</td>
                     </tr>
                   ))}
@@ -127,18 +130,9 @@ const DisruptionPanel = ({ plan }: Props) => {
               <h3 style={{ marginTop: '1rem' }}>New urgent tasks</h3>
               <ul style={{ paddingLeft: '1.25rem' }}>
                 {result.diff.addedTasks.map((t, i) => (
-                  <li key={i}><strong>{t.title}</strong> — due {t.displayDate} ({t.reason})</li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          {result.diff.taskChanges.length > 0 && (
-            <>
-              <h3 style={{ marginTop: '1rem' }}>Moved tasks</h3>
-              <ul style={{ paddingLeft: '1.25rem' }}>
-                {result.diff.taskChanges.map((t, i) => (
-                  <li key={i}>{t.id}: {t.from} → {t.to} ({t.reason})</li>
+                  <li key={i}>
+                    <strong>{t.title}</strong> — due <span className="date">{t.displayDate}</span> ({t.reason})
+                  </li>
                 ))}
               </ul>
             </>
@@ -147,7 +141,7 @@ const DisruptionPanel = ({ plan }: Props) => {
           {result.diff.warnings.length > 0 && (
             <div role="alert" style={{ marginTop: '1rem' }}>
               <h3>Warnings</h3>
-              <ul style={{ paddingLeft: '1.25rem', color: 'var(--alert)' }}>
+              <ul style={{ paddingLeft: '1.25rem', color: 'var(--accent)' }}>
                 {result.diff.warnings.map((w, i) => <li key={i}>{w}</li>)}
               </ul>
             </div>
