@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { PlanBundle, PlanRequest } from '@shared/types';
 import { fetchPlan, fetchIdeas } from './lib/api';
 import type { IdeasResponse } from '@shared/types';
+import { t, type Lang } from './lib/i18n';
 import EventForm from './components/EventForm';
 import StatCards from './components/StatCards';
 import ResultTabs from './components/ResultTabs';
@@ -13,6 +14,8 @@ type TopTab = 'planner' | 'simulator';
 
 const App = () => {
   const [topTab, setTopTab] = useState<TopTab>('planner');
+  const [lang, setLang] = useState<Lang>('en');
+  const strings = t(lang);
   const [plan, setPlan] = useState<PlanBundle | null>(null);
   const [ideas, setIdeas] = useState<IdeasResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,10 +45,10 @@ const App = () => {
 
   const tabs = useMemo(
     () => [
-      { id: 'planner' as const, label: 'Event Planner' },
-      { id: 'simulator' as const, label: 'Disruption Simulator' },
+      { id: 'planner' as const, label: strings.plannerTab },
+      { id: 'simulator' as const, label: strings.simulatorTab },
     ],
-    [],
+    [strings],
   );
 
   const onTopTabKey = (e: React.KeyboardEvent, index: number) => {
@@ -66,10 +69,27 @@ const App = () => {
 
       <header className="app-header">
         <div className="logo">
-          <span className="logo-word">Plan B</span>
-          <span className="tagline">Realistic plans that replan instantly when things go wrong</span>
+          <span className="logo-word">{strings.appName}</span>
+          <span className="tagline">{strings.tagline}</span>
         </div>
-        <nav aria-label="Primary">
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            className="btn"
+            style={{ width: 'auto', background: 'var(--surface)', color: 'var(--primary)', border: '1.5px solid var(--border)', padding: '0.5rem 1rem' }}
+            onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
+            aria-label={lang === 'en' ? 'Switch to Hindi' : 'अंग्रेज़ी में बदलें'}
+          >
+            {lang === 'en' ? 'हिं' : 'EN'}
+          </button>
+          <button
+            className="btn"
+            style={{ width: 'auto', background: 'var(--surface)', color: 'var(--primary)', border: '1.5px solid var(--border)', padding: '0.5rem 1rem' }}
+            onClick={() => window.print()}
+            title={strings.exportHint}
+          >
+            🖨 {strings.print}
+          </button>
+          <nav aria-label="Primary">
           <div role="tablist" aria-label="Sections">
             {tabs.map((tab, i) => (
               <button
@@ -87,6 +107,7 @@ const App = () => {
             ))}
           </div>
         </nav>
+        </div>
       </header>
 
       <main id="main">
@@ -98,12 +119,12 @@ const App = () => {
           {topTab === 'planner' ? (
             <div className="layout">
               <div className="form-panel">
-                <EventForm onGenerate={generate} disabled={loading} />
+                <EventForm onGenerate={generate} disabled={loading} strings={strings} />
               </div>
               <div ref={resultsRef} tabIndex={-1} aria-live="polite">
                 {loading && (
                   <div className="card" role="status">
-                    <h2>Building your plan…</h2>
+                    <h2>{strings.generating}</h2>
                     <div className="skeleton" style={{ width: '60%', marginBottom: '0.75rem' }} />
                     <div className="skeleton" style={{ width: '85%', marginBottom: '0.75rem' }} />
                     <div className="skeleton" style={{ width: '45%' }} />
@@ -114,23 +135,22 @@ const App = () => {
                     <h2>Something went wrong</h2>
                     <p style={{ color: 'var(--alert)' }}>{error}</p>
                     <button className="btn btn-primary" onClick={retry} style={{ marginTop: '1rem', width: 'auto' }}>
-                      Retry
+                      {strings.retry}
                     </button>
                   </div>
                 )}
                 {!loading && !error && !plan && (
                   <div className="card">
-                    <h2>Welcome to Plan B</h2>
+                    <h2>{strings.welcome}</h2>
                     <p style={{ color: 'var(--muted)' }}>
-                      Fill in the event details to get a budget, timeline, vendor checklist and AI ideas —
-                      then simulate what happens if something goes wrong.
+                      {strings.welcomeBody}
                     </p>
                   </div>
                 )}
                 {!loading && !error && plan && (
                   <>
-                    <StatCards plan={plan} />
-                    <ResultTabs plan={plan} ideas={ideas} onPlanUpdate={setPlan} />
+                    <StatCards plan={plan} strings={strings} />
+                    <ResultTabs plan={plan} ideas={ideas} onPlanUpdate={setPlan} strings={strings} />
                   </>
                 )}
               </div>

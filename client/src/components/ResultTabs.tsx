@@ -13,22 +13,30 @@ interface Tab {
   label: string;
 }
 
-const TABS: Tab[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'budget', label: 'Budget' },
-  { id: 'timeline', label: 'Timeline' },
-  { id: 'vendors', label: 'Vendors' },
-  { id: 'ideas', label: 'Ideas' },
-  { id: 'planb', label: 'Plan B' },
+const TABS: Array<{ id: string; labelKey: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab' }> = [
+  { id: 'overview', labelKey: 'overview' },
+  { id: 'budget', labelKey: 'budgetTab' },
+  { id: 'timeline', labelKey: 'timelineTab' },
+  { id: 'vendors', labelKey: 'vendorsTab' },
+  { id: 'ideas', labelKey: 'ideasTab' },
+  { id: 'planb', labelKey: 'planbTab' },
 ];
 
 interface Props {
   plan: PlanBundle;
   ideas: IdeasResponse | null;
   onPlanUpdate: (plan: PlanBundle) => void;
+  strings: {
+    overview: string;
+    budgetTab: string;
+    timelineTab: string;
+    vendorsTab: string;
+    ideasTab: string;
+    planbTab: string;
+  };
 }
 
-const ResultTabs = ({ plan, ideas, onPlanUpdate }: Props) => {
+const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
   const [active, setActive] = useState('overview');
 
   const panels = useMemo(
@@ -70,7 +78,7 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate }: Props) => {
             onClick={() => setActive(tab.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
           >
-            {tab.label}
+            {strings[tab.labelKey]}
           </button>
         ))}
       </div>

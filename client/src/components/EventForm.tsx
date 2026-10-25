@@ -32,9 +32,23 @@ const EVENT_TYPES = [
 interface Props {
   onGenerate: (request: PlanRequest) => void;
   disabled: boolean;
+  strings: {
+    eventDetails: string;
+    eventType: string;
+    wedding: string;
+    birthday: string;
+    community: string;
+    eventDate: string;
+    city: string;
+    guests: string;
+    budget: string;
+    theme: string;
+    generate: string;
+    generating: string;
+  };
 }
 
-const EventForm = ({ onGenerate, disabled }: Props) => {
+const EventForm = ({ onGenerate, disabled, strings }: Props) => {
   const {
     register,
     handleSubmit,
@@ -55,11 +69,11 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
   };
 
   return (
-    <form className="card" onSubmit={handleSubmit(onSubmit)} noValidate aria-label="Event details">
-      <h2>Event details</h2>
+    <form className="card" onSubmit={handleSubmit(onSubmit)} noValidate aria-label={strings.eventDetails}>
+      <h2>{strings.eventDetails}</h2>
 
       <fieldset style={{ border: 'none', marginTop: '1rem' }}>
-        <legend style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.9rem' }}>Event type</legend>
+        <legend style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.9rem' }}>{strings.eventType}</legend>
         <div className="event-type-group" role="radiogroup" aria-label="Event type">
           {EVENT_TYPES.map((t) => (
             <button
@@ -71,7 +85,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
               onClick={() => setValue('eventType', t.value, { shouldValidate: true })}
             >
               <span className="event-type-icon" aria-hidden="true">{t.icon}</span>
-              <span>{t.label}</span>
+              <span>{strings[t.value]}</span>
             </button>
           ))}
         </div>
@@ -79,7 +93,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       </fieldset>
 
       <div className="form-field" style={{ marginTop: '1rem' }}>
-        <label htmlFor="eventDate">Event date</label>
+        <label htmlFor="eventDate">{strings.eventDate}</label>
         <input
           id="eventDate"
           type="date"
@@ -91,7 +105,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       </div>
 
       <div className="form-field">
-        <label htmlFor="city">City</label>
+        <label htmlFor="city">{strings.city}</label>
         <input
           id="city"
           type="text"
@@ -104,7 +118,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       </div>
 
       <div className="form-field">
-        <label htmlFor="guests">Guests</label>
+        <label htmlFor="guests">{strings.guests}</label>
         <input
           id="guests"
           type="number"
@@ -118,7 +132,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       </div>
 
       <div className="form-field">
-        <label htmlFor="budget">Total budget (₹)</label>
+        <label htmlFor="budget">{strings.budget}</label>
         <input
           id="budget"
           type="number"
@@ -132,7 +146,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       </div>
 
       <div className="form-field">
-        <label htmlFor="theme">Theme (optional)</label>
+        <label htmlFor="theme">{strings.theme}</label>
         <input
           id="theme"
           type="text"
@@ -148,7 +162,7 @@ const EventForm = ({ onGenerate, disabled }: Props) => {
       {submitError && <p className="field-error" role="alert">{submitError}</p>}
 
       <button type="submit" className="btn btn-primary" disabled={disabled}>
-        {disabled ? 'Generating…' : 'Generate Plan'}
+        {disabled ? strings.generating : strings.generate}
       </button>
     </form>
   );
