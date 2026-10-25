@@ -374,19 +374,54 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin: 0 calc(var(--space) * -2); /* bleed toward card edges so more fits */
+  padding: 0 calc(var(--space) * 2);
 }
-.table-scroll table { min-width: 880px; }
+.table-scroll table { min-width: 1080px; }
 .table-scroll td ul { padding-left: 1.1rem; margin: 0; }
 .table-scroll td { word-break: normal; overflow-wrap: break-word; }
+
+/* column sizing: first (vendor) column needs real room to read */
+.table-scroll th:nth-child(2),
+.table-scroll td:nth-child(2) { min-width: 230px; }
+.table-scroll th:nth-child(5),
+.table-scroll td:nth-child(5) { min-width: 200px; }
+.table-scroll th:nth-child(6),
+.table-scroll td:nth-child(6) { min-width: 170px; }
+.table-scroll th:nth-child(7),
+.table-scroll td:nth-child(7) { min-width: 150px; }
 
 /* keep narrow columns narrow */
 .col-checkbox { width: 56px; }
 .col-status { width: 130px; }
-.col-cost { width: 100px; white-space: nowrap; }
+.col-cost { width: 110px; white-space: nowrap; }
 
-/* results column gets room to breathe on wide screens */
+/* ---------- form panel: never overflow its box ---------- */
+.layout > * { min-width: 0; }  /* grid children can shrink; prevents overflow */
+
+.form-panel .card {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.form-panel input,
+.form-panel select {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* the date input's native picker button can push past the box on narrow screens */
+.form-panel input[type='date'] { min-width: 0; }
+
+/* ---------- results column gets room to breathe on wide screens ---------- */
 @media (min-width: 1200px) {
-  .layout { grid-template-columns: minmax(300px, 340px) 1fr; }
+  .layout { grid-template-columns: minmax(300px, 360px) 1fr; }
+}
+
+@media (max-width: 480px) {
+  .app-shell { padding: calc(var(--space) * 2); }
+  .card { padding: calc(var(--space) * 2.5); }
 }
 
 /* ---------- timeline cue-sheet ---------- */
