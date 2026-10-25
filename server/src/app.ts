@@ -10,9 +10,44 @@ dotenv.config();
 
 const app = express();
 
-app.use(helmet());
 app.use(
-  cors({ origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173" }),
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "https://fonts.googleapis.com"],
+        "img-src": ["'self'", "data:", "https:"],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
+        "connect-src": ["'self'", "http://localhost:3000", "https://localhost:3000"],
+        "frame-ancestors": ["'none'"],
+        "base-uri": ["'self'"],
+        "form-action": ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+  }),
+);
+
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== "development") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  }
+  next();
+});
+
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+    maxAge: 86400,
+  }),
 );
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
