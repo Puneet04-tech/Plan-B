@@ -366,8 +366,28 @@ a { color: var(--accent); }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 caption { text-align: left; color: var(--muted); font-size: 0.85rem; padding-bottom: var(--space); }
-th, td { text-align: left; padding: calc(var(--space) * 1.2) calc(var(--space) * 1); border-bottom: 1px solid var(--rule); }
-th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+th, td { text-align: left; padding: calc(var(--space) * 1.2) calc(var(--space) * 1); border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+/* Wide tables scroll horizontally instead of crushing columns into vertical
+   text towers. The wrapper is what scrolls; the table keeps a readable min width. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table { min-width: 880px; }
+.table-scroll td ul { padding-left: 1.1rem; margin: 0; }
+.table-scroll td { word-break: normal; overflow-wrap: break-word; }
+
+/* keep narrow columns narrow */
+.col-checkbox { width: 56px; }
+.col-status { width: 130px; }
+.col-cost { width: 100px; white-space: nowrap; }
+
+/* results column gets room to breathe on wide screens */
+@media (min-width: 1200px) {
+  .layout { grid-template-columns: minmax(300px, 340px) 1fr; }
+}
 
 /* ---------- timeline cue-sheet ---------- */
 

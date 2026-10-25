@@ -32,14 +32,15 @@ const VendorsView = ({ plan }: Props) => {
         {booked} of {items.length} booked
       </p>
 
+      <div className="table-scroll">
       <table>
         <caption>Questions to ask, documents to collect, and booking status for each vendor.</caption>
         <thead>
           <tr>
-            <th scope="col">Booked</th>
+            <th scope="col" className="col-checkbox">Booked</th>
             <th scope="col">Vendor</th>
-            <th scope="col">Status</th>
-            <th scope="col">Est. cost</th>
+            <th scope="col" className="col-status">Status</th>
+            <th scope="col" className="col-cost">Est. cost</th>
             <th scope="col">Key questions</th>
             <th scope="col">Documents</th>
             <th scope="col">Notes</th>
@@ -48,7 +49,7 @@ const VendorsView = ({ plan }: Props) => {
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
-              <td>
+              <td className="col-checkbox">
                 <input
                   type="checkbox"
                   checked={item.contacted}
@@ -74,7 +75,7 @@ const VendorsView = ({ plan }: Props) => {
                   Advance: {item.advancePaymentGuidance} · Confirm by {item.confirmLeadDays} days before event
                 </div>
               </td>
-              <td>
+              <td className="col-status">
                 <select
                   value={item.status}
                   onChange={(e) => update(item.id, { status: e.target.value as VendorStatus })}
@@ -86,7 +87,7 @@ const VendorsView = ({ plan }: Props) => {
                   ))}
                 </select>
               </td>
-              <td>{formatINR(item.estimatedCost)}</td>
+              <td className="col-cost">{formatINR(item.estimatedCost)}</td>
               <td>
                 <ul style={{ paddingLeft: '1rem', margin: 0 }}>
                   {item.questions.slice(0, 2).map((q) => <li key={q}>{q}</li>)}
@@ -111,6 +112,7 @@ const VendorsView = ({ plan }: Props) => {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

@@ -107,6 +107,7 @@ const DisruptionPanel = ({ plan }: Props) => {
           {result.diff.budgetChanges.length > 0 && (
             <>
               <h3>Budget changes</h3>
+              <div className="table-scroll">
               <table>
                 <caption>Every adjusted budget line, old vs new with the reason.</caption>
                 <thead>
@@ -122,6 +123,7 @@ const DisruptionPanel = ({ plan }: Props) => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </>
           )}
 

@@ -85,12 +85,13 @@ const BudgetView = ({ plan }: Props) => {
         </ul>
       </div>
 
+      <div className="table-scroll">
       <table>
         <caption>Budget lines with planned vs actual spend. Edit the Actual column to track.</caption>
         <thead>
           <tr>
             <th scope="col">Category</th>
-            <th scope="col">Planned</th>
+            <th scope="col" className="col-cost">Planned</th>
             <th scope="col">Actual</th>
             <th scope="col">Difference</th>
           </tr>
@@ -125,6 +126,7 @@ const BudgetView = ({ plan }: Props) => {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

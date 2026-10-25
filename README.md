@@ -59,14 +59,14 @@ plan-b/
 
 ## Feature → scoring mapping
 
-| Requirement | Where |
-|---|---|
-| Code quality | Strict TS, shared types module, pure engines, no dead code |
-| Security | helmet, strict CORS, JSON body limit, rate limits, Zod on every request + LLM output, API keys server-side only, no stack traces in errors, no `dangerouslySetInnerHTML` |
-| Efficiency | Only `/api/ideas` calls the LLM; engines run in ms; in-memory LRU cache with TTL on ideas; Vite proxy keeps CORS zero-cost |
-| Testing | 46 Vitest tests on engines (template sums, exact reconciliation, rush boundaries, leap years, contingency-first trims, determinism) |
-| Accessibility | Skip link, semantic landmarks, ARIA tabs with arrow keys, radio group for event type, `aria-describedby` errors, aria-live regions, 44px touch targets, `prefers-reduced-motion`, print stylesheet |
-| Problem alignment | All three event types, four core deliverables, five disruption scenarios with typed diffs |
+| Requirement       | Where                                                                                                                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Code quality      | Strict TS, shared types module, pure engines, no dead code                                                                                                                                         |
+| Security          | helmet, strict CORS, JSON body limit, rate limits, Zod on every request + LLM output, API keys server-side only, no stack traces in errors, no `dangerouslySetInnerHTML`                           |
+| Efficiency        | Only `/api/ideas` calls the LLM; engines run in ms; in-memory LRU cache with TTL on ideas; Vite proxy keeps CORS zero-cost                                                                         |
+| Testing           | 46 Vitest tests on engines (template sums, exact reconciliation, rush boundaries, leap years, contingency-first trims, determinism)                                                                |
+| Accessibility     | Skip link, semantic landmarks, ARIA tabs with arrow keys, radio group for event type, `aria-describedby` errors, aria-live regions, 44px touch targets, `prefers-reduced-motion`, print stylesheet |
+| Problem alignment | All three event types, four core deliverables, five disruption scenarios with typed diffs                                                                                                          |
 
 ## API contract (all typed via `shared/types.ts`)
 
@@ -113,13 +113,13 @@ Coverage targets engine correctness: budget templates sum to exactly 100 incl. c
 
 ## Env variables
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `PORT` | no (default 3000) | API port |
-| `ALLOWED_ORIGIN` | no (default :5173) | CORS origin |
-| `CLOUDFLARE_API_TOKEN` | for live AI | Workers AI token (server-side only) |
-| `CLOUDFLARE_ACCOUNT_ID` | for live AI | Cloudflare account id |
-| `CLOUDFLARE_AI_MODEL` | no | Override model (default `@cf/meta/llama-3.1-8b-instruct`) |
+| Variable                | Required           | Purpose                                                   |
+| ----------------------- | ------------------ | --------------------------------------------------------- |
+| `PORT`                  | no (default 3000)  | API port                                                  |
+| `ALLOWED_ORIGIN`        | no (default :5173) | CORS origin                                               |
+| `CLOUDFLARE_API_TOKEN`  | for live AI        | Workers AI token (server-side only)                       |
+| `CLOUDFLARE_ACCOUNT_ID` | for live AI        | Cloudflare account id                                     |
+| `CLOUDFLARE_AI_MODEL`   | no                 | Override model (default `@cf/meta/llama-3.1-8b-instruct`) |
 
 ## Assumptions (editable in `server/src/data/ranges.ts`)
 
