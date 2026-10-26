@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { PlanRequest } from '@shared/types';
+import VoiceInput from './VoiceInput';
 
 const FormSchema = z.object({
   eventType: z.enum(['wedding', 'birthday', 'community']),
@@ -117,13 +118,20 @@ const EventForm = ({ onGenerate, disabled, strings }: Props) => {
 
       <div className="form-field">
         <label htmlFor="city">{strings.city}</label>
-        <input
-          id="city"
-          type="text"
-          aria-invalid={!!errors.city}
-          aria-describedby={errors.city ? 'city-error' : undefined}
-          {...register('city', { required: 'City is required' })}
-        />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            id="city"
+            type="text"
+            aria-invalid={!!errors.city}
+            aria-describedby={errors.city ? 'city-error' : undefined}
+            {...register('city', { required: 'City is required' })}
+            style={{ flex: 1 }}
+          />
+          <VoiceInput
+            onTranscript={(text) => setValue('city', text, { shouldValidate: true })}
+            className="voice-input-compact"
+          />
+        </div>
         {errors.city && <p className="field-error" id="city-error">{errors.city.message}</p>}
       </div>
 

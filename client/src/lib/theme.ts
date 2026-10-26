@@ -11,9 +11,9 @@ function readInitialTheme(): Theme {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "dark" || stored === "light") return stored;
   } catch {
-    // storage unavailable — default to light
+    // storage unavailable — default to dark for Glow-Claymorphism
   }
-  return "light"; // default is light per design spec
+  return "dark"; // default is dark for Glow-Claymorphism design
 }
 
 /** Manages the theme on <html data-theme> and persists the choice. */

@@ -2,6 +2,7 @@
 
 import type { PlanBundle, VendorStatus } from '@shared/types';
 import { useVendorChecklist } from '../lib/vendorStorage';
+import VendorAI from './VendorAI';
 
 const STATUS_OPTIONS: Array<{ value: VendorStatus; label: string }> = [
   { value: 'to-contact', label: 'To contact' },
@@ -113,6 +114,8 @@ const VendorsView = ({ plan }: Props) => {
         </tbody>
       </table>
       </div>
+
+      <VendorAI planData={plan} />
     </div>
   );
 };

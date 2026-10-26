@@ -25,4 +25,5 @@ export interface IdeasProviderResult {
 
 export interface IdeasProvider {
   generate(input: IdeasInput): Promise<IdeasProviderResult>;
+  generateStream?(input: IdeasInput): AsyncGenerator<string, void, unknown>;
 }

@@ -10,6 +10,8 @@ import EventForm from './components/EventForm';
 import StatCards from './components/StatCards';
 import ResultTabs from './components/ResultTabs';
 import PlanBPanel from './components/PlanBPanel';
+import AIChat from './components/AIChat';
+import BudgetOptimizer from './components/BudgetOptimizer';
 
 type TopTab = 'planner' | 'simulator';
 
@@ -161,6 +163,8 @@ const App = () => {
           ) : (
             <PlanBPanel plan={plan} />
           )}
+
+          <AIChat planData={lastRequest} />
         </div>
       </main>
 

@@ -3,6 +3,14 @@
 import { useMemo, useState } from 'react';
 import type { PlanBundle, TaskStatus } from '@shared/types';
 
+interface TimelineInsight {
+  id: string;
+  type: 'warning' | 'suggestion' | 'info';
+  title: string;
+  description: string;
+  actionable: boolean;
+}
+
 // Cue-sheet: status conveyed by text label + icon, never color alone.
 const STATUS_META: Record<TaskStatus, { label: string; icon: string }> = {
   overdue: { label: 'OVERDUE', icon: '⚠' },
@@ -17,6 +25,55 @@ interface Props {
 const TimelineView = ({ plan }: Props) => {
   const [done, setDone] = useState<Record<string, boolean>>({});
 
+  const insights: TimelineInsight[] = useMemo(() => {
+    const insights: TimelineInsight[] = [];
+
+    const overdueTasks = plan.timeline.tasks.filter(t => t.status === 'overdue');
+    if (overdueTasks.length > 0) {
+      insights.push({
+        id: 'overdue',
+        type: 'warning',
+        title: `${overdueTasks.length} Tasks Overdue`,
+        description: 'These tasks are past their deadline. Consider prioritizing them immediately to avoid cascading delays.',
+        actionable: true,
+      });
+    }
+
+    const criticalTasks = plan.timeline.tasks.filter(t => t.isOnCriticalPath && t.status !== 'done');
+    if (criticalTasks.length > 2) {
+      insights.push({
+        id: 'critical',
+        type: 'warning',
+        title: 'High Critical Path Load',
+        description: 'You have multiple critical path tasks pending. Focus on these to prevent event delays.',
+        actionable: true,
+      });
+    }
+
+    if (plan.timeline.rushMode) {
+      insights.push({
+        id: 'rush',
+        type: 'warning',
+        title: 'Timeline in Rush Mode',
+        description: plan.timeline.rushMessage,
+        actionable: true,
+      });
+    }
+
+    const upcomingCritical = plan.timeline.tasks.filter(t => t.isOnCriticalPath && t.status === 'upcoming');
+    if (upcomingCritical.length > 0) {
+      insights.push({
+        id: 'upcoming-critical',
+        type: 'suggestion',
+        title: 'Upcoming Critical Tasks',
+        description: `${upcomingCritical.length} critical tasks approaching. Schedule buffer time for unexpected delays.`,
+        actionable: true,
+      });
+    }
+
+    return insights;
+  }, [plan.timeline.tasks, plan.timeline.rushMode, plan.timeline.rushMessage]);
+
   const progress = useMemo(() => {
     const total = plan.timeline.tasks.length || 1;
     return Math.round((Object.values(done).filter(Boolean).length / total) * 100);
@@ -24,11 +81,32 @@ const TimelineView = ({ plan }: Props) => {
 
   return (
     <div className="card">
-      <h2>Run of show</h2>
-      {plan.timeline.rushMessage && (
-        <p className="chip chip-alert" role="status" style={{ display: 'inline-block', margin: '0.5rem 0 1rem' }}>
-          {plan.timeline.rushMessage}
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2>Run of Show</h2>
+        <div className="chip" style={{ background: 'var(--pill-bg)', color: 'var(--pill-ink)' }}>
+          AI Insights: {insights.length}
+        </div>
+      </div>
+
+      {insights.length > 0 && (
+        <div className="timeline-insights" style={{ marginBottom: '1.5rem' }}>
+          {insights.map((insight) => (
+            <div key={insight.id} className={`insight-card insight-${insight.type}`}>
+              <div className="insight-header">
+                <span className="insight-icon">
+                  {insight.type === 'warning' ? '⚠' : insight.type === 'suggestion' ? '💡' : 'ℹ'}
+                </span>
+                <span className="insight-title">{insight.title}</span>
+              </div>
+              <p className="insight-description">{insight.description}</p>
+              {insight.actionable && (
+                <button className="btn btn-sm btn-ghost" style={{ marginTop: '0.5rem' }}>
+                  Take Action
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       <div style={{ margin: '0.75rem 0 1.5rem' }}>

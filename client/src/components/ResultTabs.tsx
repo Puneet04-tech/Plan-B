@@ -7,17 +7,21 @@ import TimelineView from './TimelineView';
 import VendorsView from './VendorsView';
 import IdeasView from './IdeasView';
 import DisruptionPanel from './DisruptionPanel';
+import BudgetOptimizer from './BudgetOptimizer';
+import RiskAnalysis from './RiskAnalysis';
 
 interface Tab {
   id: string;
   label: string;
 }
 
-const TABS: Array<{ id: string; labelKey: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab'; accent?: boolean }> = [
+const TABS: Array<{ id: string; labelKey?: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab'; label?: string; accent?: boolean }> = [
   { id: 'overview', labelKey: 'overview' },
   { id: 'budget', labelKey: 'budgetTab' },
+  { id: 'optimizer', label: '✨ AI Optimizer' },
   { id: 'timeline', labelKey: 'timelineTab' },
   { id: 'vendors', labelKey: 'vendorsTab' },
+  { id: 'risk', label: '🛡 Risk Analysis' },
   { id: 'ideas', labelKey: 'ideasTab' },
   { id: 'planb', labelKey: 'planbTab', accent: true },
 ];
@@ -43,8 +47,10 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
     () => ({
       overview: <Overview plan={plan} />,
       budget: <BudgetView plan={plan.budget} />,
+      optimizer: <BudgetOptimizer planData={plan} />,
       timeline: <TimelineView plan={plan} />,
       vendors: <VendorsView plan={plan} />,
+      risk: <RiskAnalysis planData={plan} />,
       ideas: <IdeasView ideas={ideas} plan={plan} />,
       planb: <DisruptionPanel plan={plan} onPlanUpdate={onPlanUpdate} />,
     }),
@@ -79,7 +85,7 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
             onKeyDown={(e) => onKeyDown(e, i)}
             data-accent={tab.accent || undefined}
           >
-            {strings[tab.labelKey]}
+            {tab.label || (tab.labelKey ? strings[tab.labelKey] : tab.id)}
           </button>
         ))}
       </div>
@@ -107,9 +113,9 @@ const Overview = ({ plan }: { plan: PlanBundle }) => (
         {plan.timeline.rushMessage}
       </p>
     )}
-    <p><strong>Realism:</strong> {plan.budget.realism.reason}</p>
-    <p style={{ marginTop: '0.5rem' }}><strong>Critical path:</strong> {plan.timeline.criticalPathLabel}</p>
-    <p style={{ marginTop: '0.5rem' }}>
+    <p style={{ color: 'var(--ink)' }}><strong>Realism:</strong> {plan.budget.realism.reason}</p>
+    <p style={{ marginTop: '0.5rem', color: 'var(--ink)' }}><strong>Critical path:</strong> {plan.timeline.criticalPathLabel}</p>
+    <p style={{ marginTop: '0.5rem', color: 'var(--ink)' }}>
       <strong>Vendor checklist:</strong> {plan.vendors.items.length} vendors across {new Set(plan.vendors.items.map((v) => v.category)).size} categories.
       Items marked <span className="chip chip-alert">backup</span> are high-risk and need a backup vendor.
     </p>
