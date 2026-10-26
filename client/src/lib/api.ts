@@ -4,10 +4,12 @@ import axios from "axios";
 import type {
   ApiError,
   ApiSuccess,
+  BudgetSuggestion,
   IdeasResponse,
   PlanBundle,
   PlanRequest,
   DisruptionResult,
+  RiskFactor,
   ScenarioType,
 } from "@shared/types";
 
@@ -59,6 +61,36 @@ export async function fetchRecoveryTips(
     { scenario: scenarioLabel, eventType },
   );
   return unwrap<RecoveryTipsResponse>(res.data);
+}
+
+export interface ChatResponse {
+  reply: string;
+  source: 'ai' | 'fallback';
+}
+
+export async function fetchChat(message: string, plan?: PlanBundle): Promise<ChatResponse> {
+  const res = await api.post<ApiSuccess<ChatResponse> | ApiError>('/chat', { message, plan });
+  return unwrap<ChatResponse>(res.data);
+}
+
+export interface BudgetOptimizerResponse {
+  suggestions: BudgetSuggestion[];
+  source: 'ai' | 'fallback';
+}
+
+export async function fetchBudgetOptimizer(plan: PlanBundle): Promise<BudgetOptimizerResponse> {
+  const res = await api.post<ApiSuccess<BudgetOptimizerResponse> | ApiError>('/ai/budget-optimizer', { plan });
+  return unwrap<BudgetOptimizerResponse>(res.data);
+}
+
+export interface RiskAnalysisResponse {
+  risks: RiskFactor[];
+  source: 'ai' | 'fallback';
+}
+
+export async function fetchRiskAnalysis(plan: PlanBundle): Promise<RiskAnalysisResponse> {
+  const res = await api.post<ApiSuccess<RiskAnalysisResponse> | ApiError>('/ai/risk-analysis', { plan });
+  return unwrap<RiskAnalysisResponse>(res.data);
 }
 
 export { unwrap };

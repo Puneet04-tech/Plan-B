@@ -1,61 +1,47 @@
 "use strict";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { BudgetSuggestion, PlanBundle } from '@shared/types';
+import { fetchBudgetOptimizer } from '../lib/api';
 
-interface OptimizationSuggestion {
+interface DisplaySuggestion extends BudgetSuggestion {
   id: string;
-  category: string;
-  currentCost: number;
-  suggestedCost: number;
-  savings: number;
-  description: string;
-  confidence: number;
-  type: 'reduce' | 'reallocate' | 'negotiate';
 }
 
 interface Props {
-  planData?: any;
-  onApplyOptimization?: (suggestion: OptimizationSuggestion) => void;
+  plan?: PlanBundle | null;
+  onApplyOptimization?: (suggestion: BudgetSuggestion) => void;
 }
 
-const BudgetOptimizer = ({ planData, onApplyOptimization }: Props) => {
-  const [suggestions, setSuggestions] = useState<OptimizationSuggestion[]>([
-    {
-      id: '1',
-      category: 'Catering',
-      currentCost: 120000,
-      suggestedCost: 95000,
-      savings: 25000,
-      description: 'Consider buffet-style service instead of plated meals. Estimated 20% savings while maintaining guest satisfaction.',
-      confidence: 0.85,
-      type: 'reduce',
-    },
-    {
-      id: '2',
-      category: 'Decor',
-      currentCost: 80000,
-      suggestedCost: 65000,
-      savings: 15000,
-      description: 'Use more rental items instead of purchasing. Mix of fresh and artificial flowers can reduce costs by 25%.',
-      confidence: 0.78,
-      type: 'reallocate',
-    },
-    {
-      id: '3',
-      category: 'Entertainment',
-      currentCost: 50000,
-      suggestedCost: 35000,
-      savings: 15000,
-      description: 'Negotiate with local bands or DJs. Book off-peak hours for better rates. 30% potential savings.',
-      confidence: 0.72,
-      type: 'negotiate',
-    },
-  ]);
+const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
+  const [suggestions, setSuggestions] = useState<DisplaySuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [source, setSource] = useState<'ai' | 'fallback'>('fallback');
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    if (!plan?.budget) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetchBudgetOptimizer(plan);
+      setSource(res.source);
+      setSuggestions(res.suggestions.map((s, i) => ({ ...s, id: `${s.category}-${i}` })));
+    } catch {
+      setError('Could not load AI optimizations. Please retry.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (plan?.budget) void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.budget.total, plan?.setup.eventType]);
 
   const totalSavings = suggestions.reduce((sum, s) => sum + s.savings, 0);
-  const avgConfidence = suggestions.reduce((sum, s) => sum + s.confidence, 0) / suggestions.length;
 
-  const handleApply = (suggestion: OptimizationSuggestion) => {
+  const handleApply = (suggestion: DisplaySuggestion) => {
     if (onApplyOptimization) {
       onApplyOptimization(suggestion);
     }
@@ -86,23 +72,23 @@ const BudgetOptimizer = ({ planData, onApplyOptimization }: Props) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2>AI Budget Optimizer</h2>
         <div className="chip" style={{ background: 'var(--pill-bg)', color: 'var(--pill-ink)' }}>
-          Powered by AI
+          {loading ? 'Analyzing…' : source === 'ai' ? 'Live AI' : 'Offline suggestions'}
         </div>
       </div>
+
+      {error && (
+        <div role="alert" style={{ color: 'var(--accent)', marginBottom: '1rem' }}>
+          {error}{' '}
+          <button className="btn btn-ghost" style={{ width: 'auto', minHeight: 32 }} onClick={() => void load()}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="optimizer-summary">
         <div className="summary-item">
           <div className="summary-label">Potential Savings</div>
           <div className="summary-value highlight">₹{totalSavings.toLocaleString('en-IN')}</div>
-        </div>
-        <div className="summary-item">
-          <div className="summary-label">AI Confidence</div>
-          <div className="summary-value">
-            {(avgConfidence * 100).toFixed(0)}%
-            <span className="confidence-indicator" style={{ color: getConfidenceColor(avgConfidence) }}>
-              ●
-            </span>
-          </div>
         </div>
         <div className="summary-item">
           <div className="summary-label">Suggestions</div>
@@ -117,9 +103,6 @@ const BudgetOptimizer = ({ planData, onApplyOptimization }: Props) => {
               <div className="suggestion-category">
                 <span className="type-icon">{getTypeIcon(suggestion.type)}</span>
                 {suggestion.category}
-              </div>
-              <div className="suggestion-confidence" style={{ color: getConfidenceColor(suggestion.confidence) }}>
-                {(suggestion.confidence * 100).toFixed(0)}% confidence
               </div>
             </div>
 
@@ -151,9 +134,9 @@ const BudgetOptimizer = ({ planData, onApplyOptimization }: Props) => {
         ))}
       </div>
 
-      {suggestions.length === 0 && (
+      {suggestions.length === 0 && !loading && !error && (
         <div className="empty-state">
-          <p>All optimizations applied! Your budget is now optimized.</p>
+          <p>{source === 'ai' ? 'All optimizations applied! Your budget is now optimized.' : 'No suggestions available right now.'}</p>
         </div>
       )}
     </div>

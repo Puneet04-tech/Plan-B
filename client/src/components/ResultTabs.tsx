@@ -47,10 +47,10 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
     () => ({
       overview: <Overview plan={plan} />,
       budget: <BudgetView plan={plan.budget} />,
-      optimizer: <BudgetOptimizer planData={plan} />,
+      optimizer: <BudgetOptimizer plan={plan} />,
       timeline: <TimelineView plan={plan} />,
       vendors: <VendorsView plan={plan} />,
-      risk: <RiskAnalysis planData={plan} />,
+      risk: <RiskAnalysis plan={plan} />,
       ideas: <IdeasView ideas={ideas} plan={plan} />,
       planb: <DisruptionPanel plan={plan} onPlanUpdate={onPlanUpdate} />,
     }),

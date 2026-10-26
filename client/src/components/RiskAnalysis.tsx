@@ -1,70 +1,40 @@
 "use strict";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { PlanBundle, RiskFactor as SharedRiskFactor } from '@shared/types';
+import { fetchRiskAnalysis } from '../lib/api';
 
-interface RiskFactor {
-  id: string;
-  category: 'budget' | 'timeline' | 'vendor' | 'weather' | 'logistics';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  probability: number;
-  impact: number;
-  mitigation: string;
-  aiGenerated: boolean;
-}
+type DisplayRisk = SharedRiskFactor & { id: string };
 
 interface Props {
-  planData?: any;
+  plan?: PlanBundle | null;
 }
 
-const RiskAnalysis = ({ planData }: Props) => {
-  const [risks, setRisks] = useState<RiskFactor[]>([
-    {
-      id: '1',
-      category: 'budget',
-      severity: 'medium',
-      title: 'Budget Overrun Risk',
-      description: 'Based on current allocations, there is a 25% risk of exceeding the budget due to vendor price fluctuations.',
-      probability: 0.25,
-      impact: 0.8,
-      mitigation: 'Set aside 10% contingency fund and get fixed-price quotes from vendors.',
-      aiGenerated: true,
-    },
-    {
-      id: '2',
-      category: 'vendor',
-      severity: 'high',
-      title: 'Vendor Availability',
-      description: 'Popular vendors in your area have limited availability during peak season. 40% chance of top choices being booked.',
-      probability: 0.4,
-      impact: 0.7,
-      mitigation: 'Book vendors 6 months in advance or have 2-3 backup options per category.',
-      aiGenerated: true,
-    },
-    {
-      id: '3',
-      category: 'weather',
-      severity: 'medium',
-      title: 'Weather Contingency',
-      description: 'Historical weather data indicates 30% chance of rain during your event date.',
-      probability: 0.3,
-      impact: 0.6,
-      mitigation: 'Arrange indoor backup or tent rental. Consider weather insurance.',
-      aiGenerated: true,
-    },
-    {
-      id: '4',
-      category: 'timeline',
-      severity: 'low',
-      title: 'Task Pile-up',
-      description: 'Multiple tasks are scheduled close together, creating potential bottleneck.',
-      probability: 0.2,
-      impact: 0.5,
-      mitigation: 'Stagger vendor confirmations and spread out booking deadlines.',
-      aiGenerated: true,
-    },
-  ]);
+const RiskAnalysis = ({ plan }: Props) => {
+  const [risks, setRisks] = useState<DisplayRisk[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [source, setSource] = useState<'ai' | 'fallback'>('fallback');
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    if (!plan?.budget) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetchRiskAnalysis(plan);
+      setSource(res.source);
+      setRisks(res.risks.map((r, i) => ({ ...r, id: `risk-${i}` })));
+    } catch {
+      setError('Could not load AI risk analysis. Please retry.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (plan?.budget) void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.setup.eventDate, plan?.setup.guests, plan?.budget.total]);
 
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
 
@@ -112,9 +82,18 @@ const RiskAnalysis = ({ planData }: Props) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2>AI Risk Analysis</h2>
         <div className="chip" style={{ background: 'var(--pill-bg)', color: 'var(--pill-ink)' }}>
-          {risks.length} Risks Identified
+          {loading ? 'Analyzing…' : `${source === 'ai' ? 'Live AI · ' : 'Offline · '}${risks.length} risks`}
         </div>
       </div>
+
+      {error && (
+        <div role="alert" style={{ color: 'var(--accent)', marginBottom: '1rem' }}>
+          {error}{' '}
+          <button className="btn btn-ghost" style={{ width: 'auto', minHeight: 32 }} onClick={() => void load()}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="risk-summary">
         <div className="summary-card">
@@ -196,7 +175,7 @@ const RiskAnalysis = ({ planData }: Props) => {
               <strong>Mitigation:</strong> {risk.mitigation}
             </div>
 
-            {risk.aiGenerated && (
+            {source === 'ai' && (
               <div className="ai-badge">
                 <span>✨ AI-Generated</span>
               </div>
@@ -205,9 +184,9 @@ const RiskAnalysis = ({ planData }: Props) => {
         ))}
       </div>
 
-      {filteredRisks.length === 0 && (
+      {filteredRisks.length === 0 && !loading && (
         <div className="empty-state">
-          <p>No risks found for this filter. Try selecting a different severity level.</p>
+          <p>{error ? 'Fix the error above and retry.' : 'No risks found for this filter. Try selecting a different severity level.'}</p>
         </div>
       )}
     </div>

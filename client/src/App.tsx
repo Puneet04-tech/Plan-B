@@ -164,7 +164,7 @@ const App = () => {
             <PlanBPanel plan={plan} />
           )}
 
-          <AIChat planData={lastRequest} />
+          <AIChat plan={plan} />
         </div>
       </main>
 
