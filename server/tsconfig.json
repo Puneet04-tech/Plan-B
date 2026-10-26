@@ -12,7 +12,6 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@shared/*": ["../shared/*"]
     }

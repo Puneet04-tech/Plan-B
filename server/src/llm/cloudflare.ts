@@ -8,6 +8,7 @@ import type {
   PlanBundle,
 } from '@shared/types';
 import { buildBudget, ideaCaps } from '../engine/budget';
+import { RecoveryTipsSchema } from './recovery';
 import type { IdeasInput, IdeasProvider, IdeasProviderResult } from './provider';
 
 const MAX_THEME_LENGTH = 60;
@@ -240,6 +241,52 @@ export class CloudflareProvider implements IdeasProvider {
           }
         }
       }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  /** Qualitative recovery advice. Numbers (budget/timeline) stay in the engine. */
+  async recoveryTips(scenarioLabel: string, eventType: string): Promise<string[]> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.apiToken}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: 'You respond with valid JSON only. No markdown. No commentary.' },
+              {
+                role: 'user',
+                content: [
+                  `A ${eventType} event just hit the disruption: "${scenarioLabel}".`,
+                  `Give 3 short, practical, India-specific recovery tips (max 25 words each).`,
+                  `Do NOT give any numbers, prices, or dates — the deterministic engine already recalculated those.`,
+                  `Return ONLY valid JSON: {"tips": [string, string, string]}`,
+                ].join('\n'),
+              },
+            ],
+            max_tokens: 300,
+            temperature: 0.7,
+          }),
+        },
+      );
+      if (!response.ok) throw new Error(`Cloudflare AI returned ${response.status}`);
+      const body = (await response.json()) as { result?: { response?: unknown } };
+      const raw: unknown = body.result?.response;
+      if (raw == null) throw new Error('Empty response');
+      const text = typeof raw === 'string'
+        ? raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+        : JSON.stringify(raw);
+      const parsed = RecoveryTipsSchema.parse(JSON.parse(text));
+      return parsed.tips;
     } finally {
       clearTimeout(timeout);
     }

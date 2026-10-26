@@ -26,4 +26,6 @@ export interface IdeasProviderResult {
 export interface IdeasProvider {
   generate(input: IdeasInput): Promise<IdeasProviderResult>;
   generateStream?(input: IdeasInput): AsyncGenerator<string, void, unknown>;
+  /** Qualitative recovery advice for a disruption scenario; numbers stay in the engine. */
+  recoveryTips?(scenarioLabel: string, eventType: string): Promise<string[]>;
 }

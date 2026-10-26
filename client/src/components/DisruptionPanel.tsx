@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DisruptionResult, PlanBundle, ScenarioType } from '@shared/types';
-import { fetchDisruption } from '../lib/api';
+import { fetchDisruption, fetchRecoveryTips } from '../lib/api';
 
 const SCENARIOS: Array<{ id: ScenarioType; label: string }> = [
   { id: 'venue-cancelled', label: 'Venue cancelled' },
@@ -35,6 +35,21 @@ const DisruptionPanel = ({ plan }: Props) => {
   const [result, setResult] = useState<DisruptionResult | null>(null);
   const [loading, setLoading] = useState<ScenarioType | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tips, setTips] = useState<{ list: string[]; source: 'ai' | 'fallback' } | null>(null);
+  const [tipsLoading, setTipsLoading] = useState(false);
+
+  const loadTips = async () => {
+    if (!result) return;
+    setTipsLoading(true);
+    try {
+      const res = await fetchRecoveryTips(result.diff.label, result.plan.setup.eventType);
+      setTips({ list: res.tips, source: res.source });
+    } catch {
+      setTips(null);
+    } finally {
+      setTipsLoading(false);
+    }
+  };
 
   const apply = async (scenario: ScenarioType) => {
     if (!plan) return;
@@ -43,6 +58,7 @@ const DisruptionPanel = ({ plan }: Props) => {
     try {
       const res = await fetchDisruption(plan, scenario);
       setResult(res);
+      setTips(null); // fresh scenario: clear stale tips
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to apply disruption');
     } finally {
@@ -148,6 +164,28 @@ const DisruptionPanel = ({ plan }: Props) => {
               </ul>
             </div>
           )}
+
+          <div style={{ marginTop: '1.25rem' }}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => void loadTips()}
+              disabled={tipsLoading}
+            >
+              {tipsLoading ? 'Getting tips…' : 'Get recovery tips (AI)'}
+            </button>
+            {tips && (
+              <div role="region" aria-label="Recovery tips" style={{ marginTop: '0.75rem' }}>
+                {tips.source === 'fallback' && (
+                  <p className="chip chip-warn" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
+                    Offline suggestions
+                  </p>
+                )}
+                <ul style={{ paddingLeft: '1.25rem' }}>
+                  {tips.list.map((tip, i) => <li key={i}>{tip}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

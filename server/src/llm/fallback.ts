@@ -118,4 +118,14 @@ export class FallbackProvider implements IdeasProvider {
     };
     return { ideas, source: "fallback" };
   }
+
+  /** Static, qualitative-only tips — no numbers, safe without any API key. */
+  async recoveryTips(scenarioLabel: string, _eventType: string): Promise<string[]> {
+    void _eventType;
+    return [
+      `Act on "${scenarioLabel}" immediately: confirm replacements in writing before announcing anything to guests.`,
+      'Assign one decision-maker for the disrupted vendor category so messages stay consistent.',
+      'Update the vendor checklist notes and inform affected vendors the same day.',
+    ];
+  }
 }

@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { createIdeasProvider } from "../llm/factory";
+import { CloudflareProvider } from "../llm/cloudflare";
 import { buildBudget, ideaCaps } from "../engine/budget";
 import { buildTimeline } from "../engine/scheduler";
 import { buildVendorPlan } from "../engine/vendors";
@@ -109,6 +110,31 @@ router.post("/disrupt", (req: Request, res: Response) => {
     res.json({ success: true, data: result });
   } catch (error) {
     handleZodError(res, error);
+  }
+});
+
+// Qualitative recovery tips via LLM (optional provider method); numbers stay
+// in the engine, so this endpoint is purely advisory.
+router.post("/recovery-tips", async (req: Request, res: Response) => {
+  try {
+    const { scenario, eventType } = z
+      .object({ scenario: z.string().min(1).max(80), eventType: z.string().min(1).max(40) })
+      .parse(req.body);
+    const provider = createIdeasProvider();
+    if (!provider.recoveryTips) {
+      res.json({ success: true, data: { tips: [], source: 'fallback' } });
+      return;
+    }
+    const tips = await provider.recoveryTips(scenario, eventType);
+    res.json({ success: true, data: { tips, source: provider instanceof CloudflareProvider ? 'ai' : 'fallback' } });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      handleZodError(res, error);
+      return;
+    }
+    // A failed tips call must never break the disruption flow.
+    console.error('recovery-tips failed:', error instanceof Error ? error.message : error);
+    res.json({ success: true, data: { tips: [], source: 'fallback' } });
   }
 });
 

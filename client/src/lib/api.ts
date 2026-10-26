@@ -45,4 +45,20 @@ export async function fetchDisruption(
   return unwrap<DisruptionResult>(res.data);
 }
 
+export interface RecoveryTipsResponse {
+  tips: string[];
+  source: 'ai' | 'fallback';
+}
+
+export async function fetchRecoveryTips(
+  scenarioLabel: string,
+  eventType: string,
+): Promise<RecoveryTipsResponse> {
+  const res = await api.post<ApiSuccess<RecoveryTipsResponse> | ApiError>(
+    '/recovery-tips',
+    { scenario: scenarioLabel, eventType },
+  );
+  return unwrap<RecoveryTipsResponse>(res.data);
+}
+
 export { unwrap };

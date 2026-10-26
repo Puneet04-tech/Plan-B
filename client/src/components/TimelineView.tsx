@@ -39,7 +39,7 @@ const TimelineView = ({ plan }: Props) => {
       });
     }
 
-    const criticalTasks = plan.timeline.tasks.filter(t => t.isOnCriticalPath && t.status !== 'done');
+    const criticalTasks = plan.timeline.tasks.filter(t => t.isOnCriticalPath);
     if (criticalTasks.length > 2) {
       insights.push({
         id: 'critical',
@@ -55,7 +55,7 @@ const TimelineView = ({ plan }: Props) => {
         id: 'rush',
         type: 'warning',
         title: 'Timeline in Rush Mode',
-        description: plan.timeline.rushMessage,
+        description: plan.timeline.rushMessage ?? 'The schedule is tight; high-risk tasks have been pulled forward.',
         actionable: true,
       });
     }
