@@ -18,7 +18,7 @@
   --pill-bg: rgba(139, 124, 255, 0.16);
   --pill-ink: #C4B5FD;
   --grad-accent: linear-gradient(120deg, #8B7CFF 0%, #C4B5FD 100%);
-  --grad-hero: linear-gradient(105deg, #FFFFFF 30%, #C4B5FD 70%, #8B7CFF 100%);
+  --grad-hero: linear-gradient(100deg, #FFFFFF 35%, #7C9CF8 60%, #22D3EE 100%);
   --radius: 16px;
   --radius-lg: 24px;
   --space: 0.5rem;
@@ -44,7 +44,7 @@
   --pill-bg: rgba(109, 91, 208, 0.12);
   --pill-ink: #55449E;
   --grad-accent: linear-gradient(120deg, #6D5BD0 0%, #9F8FFF 100%);
-  --grad-hero: linear-gradient(105deg, #1B1438 30%, #55449E 100%);
+  --grad-hero: linear-gradient(100deg, #FFFFFF 35%, #7C9CF8 65%, #22D3EE 100%);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -58,9 +58,9 @@ body {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   /* layered radial glows like the reference landing */
   background:
-    radial-gradient(60% 50% at 15% 0%, rgba(139, 124, 255, 0.18), transparent 60%),
-    radial-gradient(50% 40% at 85% 10%, rgba(196, 181, 253, 0.12), transparent 60%),
-    radial-gradient(40% 40% at 50% 100%, rgba(139, 124, 255, 0.1), transparent 60%),
+    radial-gradient(60% 50% at 15% 0%, rgba(124, 156, 248, 0.2), transparent 60%),
+    radial-gradient(50% 40% at 85% 10%, rgba(34, 211, 238, 0.08), transparent 60%),
+    radial-gradient(40% 40% at 50% 100%, rgba(124, 156, 248, 0.12), transparent 60%),
     var(--paper);
   background-attachment: fixed;
   color-scheme: dark;
@@ -786,17 +786,31 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 }
 
 .hero-badge {
-  display: inline-block;
-  padding: 0.45rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.2rem;
   border-radius: 999px;
-  background: var(--pill-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--pill-ink);
-  font-size: 0.8rem;
+  background: rgba(10, 8, 30, 0.75);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: #E0F2FE;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  box-shadow: var(--clay-shadow-sm);
+  box-shadow: 0 4px 16px rgba(10, 8, 30, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: rise-in var(--motion-base) ease-out both;
+}
+
+.hero-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22D3EE;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .hero-title {
@@ -812,7 +826,7 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 24px rgba(139, 124, 255, 0.35));
+  filter: drop-shadow(0 0 28px rgba(124, 156, 248, 0.4));
 }
 
 .hero-sub {
@@ -845,11 +859,11 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 .feature-card {
   text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--glass-border);
+  background: rgba(13, 11, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-lg);
   padding: calc(var(--space) * 4);
-  box-shadow: var(--clay-shadow-sm);
+  box-shadow: 0 20px 40px rgba(5, 3, 20, 0.5);
   transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
   animation: rise-in var(--motion-base) ease-out both;
 }
@@ -863,8 +877,22 @@ th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   box-shadow: var(--clay-shadow), var(--clay-glow);
 }
 
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: calc(var(--space) * 2);
+  border-radius: 12px;
+  font-size: 1.2rem;
+  color: #22D3EE;
+  background: linear-gradient(135deg, rgba(124, 156, 248, 0.18), rgba(34, 211, 238, 0.12));
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+
 .feature-card h3 {
-  color: var(--accent-2);
+  color: #F1F5F9;
   margin-bottom: calc(var(--space) * 1);
 }
 
