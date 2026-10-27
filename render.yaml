@@ -14,7 +14,7 @@ services:
     runtime: node
     plan: free
     # The API lives in server/ — install deps and start from there.
-    buildCommand: cd server && npm install && npx tsc || true
+    buildCommand: cd server && npm install && npm run build
     startCommand: cd server && npm start
     healthCheckPath: /api/health
     autoDeploy: true
