@@ -23,7 +23,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: "20"
+        value: "20.18.0"
       # Comma-separated origin allowlist; add your Vercel URL after the first
       # deploy. Wildcard `*` allows any origin (demo mode only).
       - key: ALLOWED_ORIGIN
