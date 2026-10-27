@@ -1,90 +1,102 @@
-# Plan B — Event Planning Assistant
+# Plan B — AI Event Planning Assistant
 
-> *"Celebration meets Control Room"* — realistic plans that replan instantly when things go wrong.
+> *"Plan events that expect the unexpected."*
 
-## Problem statement
+Plan B is a GenAI-powered event planning assistant for **weddings, birthdays and community events**. It builds a realistic budget, timeline and vendor checklist — then **replans instantly** when something goes wrong, with a redline before/after diff. All numbers come from deterministic, unit-tested engines; the AI only writes creative content.
 
-Create a GenAI-powered planning assistant that helps users organize weddings, birthdays, and community events with budgets, timelines, vendor checklists, and personalized ideas.
+---
 
-**Plan B's differentiator:** it builds a realistic plan, then **replans instantly** when something goes wrong — venue cancelled, rain, guest-count jump, budget cut, vendor no-show — with a full before/after diff.
+## ✨ AI Features (live, via Cloudflare Workers AI)
 
-## Core rule: the LLM never produces numbers or dates
+| #   | Feature                                     | What it does                                                  | Grounding / guardrails                                                                                                                                     |
+| --- | ------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Personalized Ideas**                      | Generates theme concepts, decor, menu, activities per event   | Cost-capped server-side against budget lines; Zod-validated; `fitsBudget` badge per idea                                                                   |
+| 2   | **AI Chat Assistant** (`AIChat`)            | Floating chatbot that answers questions about *your* plan     | Prompt includes your real budget lines/totals as ground truth; injection-hardened `<<<DATA>>>` block                                                       |
+| 3   | **AI Budget Optimizer** (`BudgetOptimizer`) | Suggests reduce / reallocate / negotiate savings per category | Constrained to categories that exist in *your* plan; `suggestedCost < currentCost` enforced; **savings recomputed server-side** (model math never trusted) |
+| 4   | **AI Risk Analysis** (`RiskAnalysis`)       | Up to 5 risks with probability/impact, severity, mitigation   | Grounded in actual plan facts (rush mode, days available, backup-vendor flags, realism verdict)                                                            |
+| 5   | **Recovery Tips**                           | Qualitative India-specific advice after a disruption          | Prompt *forbids* numbers/dates — engines already recalculated them                                                                                         |
+| 6   | **Streaming support**                       | Provider supports streaming generation (used for chat UX)     | —                                                                                                                                                          |
+| 7   | **Voice Input** (`VoiceInput`)              | Web Speech API voice-to-text in form fields                   | Browser API; no LLM involved                                                                                                                               |
+| 8   | **Smart fallback everywhere**               | Every AI touchpoint degrades to curated/static content        | UI always labels **"Live AI"** vs **"Offline"** — provenance is never hidden                                                                               |
 
-All money, dates, task order and totals come from deterministic, unit-tested code in `server/src/engine/`. The LLM (Cloudflare Workers AI) only writes creative ideas. Its output is:
+**AI safety architecture:** system prompt states the user block is data, not instructions · control characters and injection-like patterns stripped · theme capped at 60 chars · Zod validation on every model response · caps enforced server-side · API keys never leave the server.
+
+## 🧮 Core (non-AI) Features
+
+- **Landing page** — glowing gradient hero, feature cards, live-stats strip; Home is the default view.
+- **Budget engine** — per-event percentage templates (sum exactly to 100 incl. contingency), integer-rupee lines with remainder to the largest category, per-guest catering, realism verdict (tight / comfortable / generous) from editable ranges, animated SVG donut + Planned/Actual/Difference tracker.
+- **Timeline engine (cue-sheet)** — lead-day task templates with dependencies, schedule scale factor, **rush mode** on short notice ("Only 12 days left…"), IST-safe date math (no past dates, month/leap-year safe), sorted tasks with human dates ("6 Nov 2026"), critical-path marking, progress bar, checkable tasks.
+- **Vendor checklist** — per event type: questions to ask, documents to collect, advance-payment guidance, confirmation deadlines linked to the scheduler, estimated cost linked to budget lines, `needsBackup` flags on high-risk vendors (venue, caterer), India-specific compliance notes for community events ("check your local rules"), status (To contact / Quoted / Booked) + contact notes **persisted in localStorage** (works even when storage is unavailable).
+- **Disruption simulator (the hero)** — 5 one-click scenarios: *venue cancelled, rain, guests +30%, budget cut 20%, caterer no-show*. Pure functions produce a typed diff: budget changes with reasons, moved/added tasks, warnings, infeasibility flags. **Totals always reconcile exactly**; contingency is consumed before any trimming, in a documented deterministic order. Redline UI: old value struck through, new value highlighted, amounts spelled out in text (never color alone).
+- **Stat cards** — total budget, per-guest with realism chip, days-left with rush chip, readiness score.
+- **Design system** — "urban intelligence" dark theme: navy/violet canvas with radial glows, glassmorphism header/panels, glowing 1px micro-borders, electric blue→violet gradients, distinct glowing feature icons; optional light theme; `prefers-reduced-motion` respected.
+- **i18n** — English/Hindi label toggle (हिं / EN) with visible label and accessible name.
+- **Print/Export** — print stylesheet + `window.print()` for PDF export.
+- **Accessibility** — skip link, semantic landmarks, ARIA tabs with arrow-key nav, radio-group event-type cards, `aria-describedby` error linking, aria-live regions, 44px touch targets, tables with captions/scopes, color never the only signal.
+- **Loading/error/empty states** — skeleton loaders, retry on failure, greyed sample-plan preview before first generation.
+
+## 🚫 Core rule: the LLM never produces numbers or dates
+
+All money, dates, task order and totals come from deterministic, unit-tested code in `server/src/engine/`. The LLM only writes creative ideas and qualitative advice. Its output is:
 
 1. Validated with Zod,
-2. **Cap-checked server-side** against budget lines computed by the budget engine (ideas that exceed a category cap are dropped or trimmed),
-3. Labeled `source: "ai"` or `source: "fallback"` so the UI can show provenance.
+2. **Cap-checked server-side** against budget lines (over-cap ideas dropped or trimmed),
+3. Labeled `source: "ai"` or `source: "fallback"` so the UI shows provenance.
 
-The user's theme text goes into a clearly delimited `<<<DATA … >>>` block and the system prompt states it is data, not instructions; control characters and injection-like patterns are stripped.
+The user's theme text goes into a delimited `<<<DATA … >>>` block; the system prompt states it is data, not instructions.
 
-## Architecture
+## 🏗 Architecture
 
 ```mermaid
 flowchart LR
   subgraph client["React client (:5173)"]
-    form[Event form] --> api[lib/api.ts]
-    ui[Stat cards · Budget donut · Timeline stepper · Vendor checklist · Ideas · Plan B diff]
+    landing[Landing] --> form[Event form + voice]
+    ui[Stat cards · Budget donut · Cue-sheet timeline · Vendor checklist · Ideas · Redline diff · Chat · Optimizer · Risk]
   end
   subgraph server["Express server (:3000)"]
     routes[Routes + Zod validation + rate limit] --> engines
-    subgraph engines["Deterministic engines (pure, tested)"]
+    subgraph engines["Deterministic engines (pure, 46 tests)"]
       budget[Budget] --- sched[Scheduler] --- vend[Vendors] --- disr[Disruptions]
     end
     routes --> llm[LLM provider factory]
     llm --> cf[Cloudflare Workers AI]
     llm --> fb[Fallback provider]
   end
-  api -->|/api/plan /api/ideas /api/disrupt| routes
+  ui -->|/api/plan /api/ideas /api/disrupt /api/chat /api/ai/* /api/recovery-tips| routes
 ```
 
 ```
 plan-b/
 ├── shared/types.ts           # single API contract for client + server
-├── server/
-│   ├── src/
-│   │   ├── engine/           # budget.ts, scheduler.ts, vendors.ts, disruptions.ts
-│   │   ├── data/             # ranges.ts (assumptions), vendors.ts (checklist data)
-│   │   ├── llm/              # provider.ts, cloudflare.ts, fallback.ts, factory.ts
-│   │   ├── validation/       # Zod schemas (injection-safe)
-│   │   └── routes/           # /api/plan /api/ideas /api/disrupt /api/health
-│   └── src/app.ts            # helmet, CORS, JSON limit, rate limits
-├── client/
-│   └── src/
-│       ├── components/       # EventForm, StatCards, ResultTabs, Budget/Timeline/Vendors/Ideas views, DisruptionPanel
-│       ├── lib/              # api.ts, vendorStorage.ts, i18n.ts
-│       └── index.css         # design tokens (single source of truth)
+├── server/src/
+│   ├── engine/               # budget.ts, scheduler.ts, vendors.ts, disruptions.ts
+│   ├── data/                 # ranges.ts (assumptions), vendors.ts (checklist data)
+│   ├── llm/                  # provider.ts, cloudflare.ts, fallback.ts, factory.ts, ai-outputs.ts, recovery.ts
+│   ├── validation/           # Zod schemas (injection-safe)
+│   ├── routes/               # plan, ideas, disrupt, chat, ai/budget-optimizer, ai/risk-analysis, recovery-tips, health
+│   └── app.ts                # helmet+CSP, HSTS, strict CORS, JSON limit, rate limits
+├── client/src/
+│   ├── components/           # Landing, EventForm, StatCards, ResultTabs, Budget/Timeline/Vendors/Ideas views,
+│   │                         # DisruptionPanel, AIChat, BudgetOptimizer, RiskAnalysis, VendorAI, VoiceInput
+│   ├── lib/                  # api.ts, theme.ts, vendorStorage.ts, i18n.ts
+│   └── index.css             # design tokens (single source of truth)
 └── tests/                    # Vitest: budget, scheduler, disruptions+vendors (46 tests)
 ```
 
-## Feature → scoring mapping
+## 🔌 API contract (all typed via `shared/types.ts`)
 
-| Requirement       | Where                                                                                                                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code quality      | Strict TS, shared types module, pure engines, no dead code                                                                                                                                         |
-| Security          | helmet, strict CORS, JSON body limit, rate limits, Zod on every request + LLM output, API keys server-side only, no stack traces in errors, no `dangerouslySetInnerHTML`                           |
-| Efficiency        | Only `/api/ideas` calls the LLM; engines run in ms; in-memory LRU cache with TTL on ideas; Vite proxy keeps CORS zero-cost                                                                         |
-| Testing           | 46 Vitest tests on engines (template sums, exact reconciliation, rush boundaries, leap years, contingency-first trims, determinism)                                                                |
-| Accessibility     | Skip link, semantic landmarks, ARIA tabs with arrow keys, radio group for event type, `aria-describedby` errors, aria-live regions, 44px touch targets, `prefers-reduced-motion`, print stylesheet |
-| Problem alignment | All three event types, four core deliverables, five disruption scenarios with typed diffs                                                                                                          |
+| Endpoint                        | Body                                                     | Returns                                                                 |
+| ------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `POST /api/plan`                | `{ eventType, eventDate, city, guests, budget, theme? }` | `{ setup, budget, timeline, vendors, readiness }` — **no LLM**, instant |
+| `POST /api/ideas`               | same                                                     | `{ ideas: { themeConcept, items[] }, source: "ai"\|"fallback" }`        |
+| `POST /api/disrupt`             | `{ plan, scenario }` (5 scenarios)                       | `{ plan, diff }` — totals reconcile exactly                             |
+| `POST /api/chat`                | `{ message, plan? }`                                     | `{ reply, source }` — grounded in your plan                             |
+| `POST /api/ai/budget-optimizer` | `{ plan }`                                               | `{ suggestions[] }` with server-computed `savings`                      |
+| `POST /api/ai/risk-analysis`    | `{ plan }`                                               | `{ risks[] }` — probability/impact/severity/mitigation                  |
+| `POST /api/recovery-tips`       | `{ scenario, eventType }`                                | `{ tips[], source }` — qualitative only                                 |
+| `GET /api/health`               | —                                                        | `{ status, timestamp }`                                                 |
 
-## API contract (all typed via `shared/types.ts`)
-
-### POST /api/plan
-```json
-{ "eventType": "wedding", "eventDate": "2026-12-25", "city": "Mumbai", "guests": 100, "budget": 500000, "theme": "sunset garden" }
-```
-→ `{ success, data: { setup, budget, timeline, vendors, readiness } }` — **no LLM**, instant.
-
-### POST /api/ideas
-Same body → `{ success, data: { ideas: { themeConcept, items[] }, source: "ai" | "fallback" } }`.
-Every item carries `category` (mapped to a budget line), `estimatedCost`, `fitsBudget`.
-
-### POST /api/disrupt
-`{ plan, scenario }` where scenario ∈ `venue-cancelled | rain | guest-count-up-30 | budget-cut-20 | vendor-no-show-caterer`
-→ `{ success, data: { plan, diff } }` with `diff = { before, after, budgetChanges[], taskChanges[], addedTasks[], warnings[], infeasible }`. Totals always reconcile exactly.
-
-## Setup and run
+## 🚀 Setup and run
 
 ```bash
 # 1. install
@@ -94,24 +106,29 @@ cd ../client && npm install
 # 2. environment
 cp .env.example server/.env
 #   fill CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID for live AI
-#   (the app works without them — curated fallback ideas are used)
+#   (the app works without them — fallback content is used, clearly labeled)
 
 # 3. run (two terminals)
 cd server && npm run dev        # API on :3000
 cd client && npm run dev        # UI on :5173 (proxies /api)
 ```
 
-## Tests
+## ✅ Tests
 
 ```bash
 cd server
-npx vitest run --root ..        # runs tests/ against src
-npm run build                   # type-check + emit
+npx vitest run --config vitest.config.ts   # 46 engine tests
+npm run build                              # type-check + emit
+cd ../client && npm run build              # client build
 ```
 
 Coverage targets engine correctness: budget templates sum to exactly 100 incl. contingency; lines sum exactly to awkward totals (₹499,999); realism verdict boundaries; rush mode triggers at 12 days but not 90; past dates rejected; dependency order preserved; month/leap-year boundaries; all five disruptions reconcile exactly with contingency-first spending and a deterministic trim order.
 
-## Env variables
+## 🔒 Security
+
+helmet with explicit CSP (font/style allowlists), HSTS in production, strict CORS with method/header allowlist, JSON body limit, rate limits on AI endpoints, Zod validation on every request **and** every LLM response, API keys server-side only, no stack traces or secrets in error responses, no `dangerouslySetInnerHTML` anywhere.
+
+## ⚙️ Env variables
 
 | Variable                | Required           | Purpose                                                   |
 | ----------------------- | ------------------ | --------------------------------------------------------- |
@@ -121,26 +138,30 @@ Coverage targets engine correctness: budget templates sum to exactly 100 incl. c
 | `CLOUDFLARE_ACCOUNT_ID` | for live AI        | Cloudflare account id                                     |
 | `CLOUDFLARE_AI_MODEL`   | no                 | Override model (default `@cf/meta/llama-3.1-8b-instruct`) |
 
-## Assumptions (editable in `server/src/data/ranges.ts`)
+## 📐 Assumptions (editable in `server/src/data/ranges.ts`)
 
-- **Per-guest realism ranges (INR):** community 300–1500, birthday 800–3000, wedding 1500–6000. These drive the tight/comfortable/generous verdict and are deliberately starting values.
+- **Per-guest realism ranges (INR):** community 300–1500, birthday 800–3000, wedding 1500–6000 — starting values, not market research.
 - **Rush premium:** +15% on venue/catering when a disruption forces an emergency booking.
-- **Trim order** when budget must be freed: promotion → activities → decor → soundLights → entertainment (contingency is consumed first, before any trim).
+- **Trim order** when budget must be freed: promotion → activities → decor → soundLights → entertainment (contingency consumed first).
 
-## Limitations
+## ⚠️ Limitations
 
 - Vendor data is template-based, not a live vendor marketplace.
-- Realism ranges are assumptions, not market research.
-- The idea cache is in-memory per server process (no persistence).
+- AI caches are in-memory per server process (no persistence).
 - Hindi i18n covers labels only; engine output strings are English.
+- Voice input requires Web Speech API support (Chrome, Edge, Safari).
+- Risk probabilities are model estimates, not actuarial data.
 
-## 2-minute demo script
+## 🎬 2-minute demo script
 
-1. Open the app → wedding, Mumbai, 100 guests, ₹500,000, ~2 months out → **Generate Plan**.
-2. Point at the four stat cards: budget, per-guest realism chip, days-left, readiness.
-3. **Budget tab:** donut + table; no category dominates; catering shows per-guest.
-4. **Timeline tab:** sorted stepper, dates like "6 Nov 2026", critical path badge, check off a task → progress bar.
-5. **Vendors tab:** questions, documents, advance guidance, backup flags on venue/caterer, community compliance notes.
-6. **Ideas tab:** AI ideas with fit badges (or "offline suggestions" without a key).
-7. **Plan B tab (the hero):** click *Venue cancelled* → before/after diff: contingency consumed first, rush premium, "Book replacement venue" task added within 2 days, warnings if infeasible. Click *Budget cut 20%* → exactly what was cut, by how much, in a documented order.
-8. Switch to Hindi, hit Print/Export, done.
+1. **Landing page** — hero, three feature cards, stats strip → "Start planning".
+2. Wedding, Mumbai, 100 guests, ₹500,000 → **Generate Plan** → four stat cards with realism chip and rush awareness.
+3. **Budget tab:** donut + planned/actual tracker; no category dominates; catering shows per-guest.
+4. **Timeline tab:** cue-sheet with "6 Nov 2026"-style dates, critical-path accent, progress bar.
+5. **Vendors tab:** questions, documents, advance guidance, backup flags, community compliance notes; check an item — persisted.
+6. **AI Optimizer tab:** live suggestions grounded in *your* lines, server-computed savings.
+7. **Risk Analysis tab:** live risks with probability/impact bars and mitigations.
+8. **Ideas tab:** AI ideas with fit badges.
+9. **Plan B tab (hero):** click *Venue cancelled* → redline diff, contingency consumed first, urgent task added. Click *Get recovery tips (AI)* → qualitative advice.
+10. **Chat bubble:** ask "Is my catering budget enough?" → answer cites your real numbers.
+11. Switch to हिं, toggle Dark/Light, hit Print/Export — done.
