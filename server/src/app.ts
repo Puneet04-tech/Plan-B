@@ -44,7 +44,7 @@ app.use(
   cors({
     // Comma-separated allowlist; wildcard `*` matches any origin (demo mode).
     origin: (origin, cb) => {
-      const raw = process.env.ALLOWED_ORIGIN ?? "http://localhost:5173";
+      const raw = process.env.ALLOWED_ORIGIN ?? "*";
       const allowed = raw.split(",").map((s) => s.trim()).filter(Boolean);
       if (allowed.includes("*") || !origin || allowed.includes(origin)) {
         cb(null, true);
@@ -52,8 +52,8 @@ app.use(
         cb(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     maxAge: 86400,
   }),
