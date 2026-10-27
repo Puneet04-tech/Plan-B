@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json src/index.ts",
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node dist/server/src/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
