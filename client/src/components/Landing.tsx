@@ -12,16 +12,19 @@ const Landing = ({ onGetStarted }: Props) => {
   const features = [
     {
       icon: '◎',
+      color: '#60A5FA', // electric blue
       title: 'Realistic budgets',
       body: 'Deterministic engine allocates every rupee — venue, catering, decor — with per-guest realism verdicts. No guessed numbers, ever.',
     },
     {
       icon: '⇄',
+      color: '#A78BFA', // vivid violet
       title: 'Plans that replan',
       body: 'Venue cancelled? Rain? Guests +30%? One click recalculates the budget and timeline and shows a redline diff of exactly what changed.',
     },
     {
       icon: '✦',
+      color: '#FBBF24', // amber gold
       title: 'AI that knows its lane',
       body: 'Cloudflare Workers AI writes personalized ideas, answers questions and flags risks — grounded in your actual plan, capped by your budget.',
     },
@@ -47,7 +50,7 @@ const Landing = ({ onGetStarted }: Props) => {
       <div className="feature-grid">
         {features.map((f) => (
           <div className="feature-card" key={f.title}>
-            <span className="feature-icon" aria-hidden="true">{f.icon}</span>
+            <span className="feature-icon" style={{ '--icon-c': f.color } as React.CSSProperties} aria-hidden="true">{f.icon}</span>
             <h3>{f.title}</h3>
             <p>{f.body}</p>
           </div>

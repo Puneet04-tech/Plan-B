@@ -74,10 +74,10 @@ const App = () => {
 
       <header className="app-header">
         <div className="logo">
-          <span className="logo-word">{strings.appName}</span>
-          <span className="tagline">{strings.tagline}</span>
+          <span className="logo-word">Plan B</span>
+          <span className="logo-sub">Urban Intelligence Platform</span>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="header-actions">
           <button
             className="lang-toggle"
             onClick={toggleTheme}
