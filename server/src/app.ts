@@ -42,7 +42,16 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173",
+    // Comma-separated allowlist; wildcard `*` matches any origin (demo mode).
+    origin: (origin, cb) => {
+      const raw = process.env.ALLOWED_ORIGIN ?? "http://localhost:5173";
+      const allowed = raw.split(",").map((s) => s.trim()).filter(Boolean);
+      if (allowed.includes("*") || !origin || allowed.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,

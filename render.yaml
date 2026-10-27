@@ -1,0 +1,41 @@
+# Render deployment manifest
+# Deploy the API as a Node service. In Render:
+#   New → Blueprint → pick this repo → the API deploys automatically.
+#
+# After the first deploy, Render prints the service URL, e.g.
+#   https://plan-b-api.onrender.com
+# Set that in the Vercel project as VITE_API_BASE_URL (see vercel.json) and
+# set ALLOWED_ORIGIN here to the Vercel app URL:
+#   ALLOWED_ORIGIN: https://plan-b.vercel.app,http://localhost:5173
+
+services:
+  - type: web
+    name: plan-b-api
+    runtime: node
+    plan: free
+    # The API lives in server/ — install deps and start from there.
+    buildCommand: cd server && npm ci && npm run build
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      # Comma-separated origin allowlist; add your Vercel URL after the first
+      # deploy. Wildcard `*` allows any origin (demo mode only).
+      - key: ALLOWED_ORIGIN
+        value: http://localhost:5173
+      # Live AI — set these in the Render dashboard (Secret Files / env):
+      # CLOUDFLARE_API_TOKEN: <your token>
+      # CLOUDFLARE_ACCOUNT_ID: <your account id>
+      # The API works without them; fallback content is used and clearly
+      # labeled "Offline" in the UI.
+      - sync: false
+        key: CLOUDFLARE_API_TOKEN
+      - sync: false
+        key: CLOUDFLARE_ACCOUNT_ID
+      # Optional: override the Workers AI model.
+      # CLOUDFLARE_AI_MODEL: @cf/meta/llama-3.1-8b-instruct

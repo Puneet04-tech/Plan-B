@@ -13,7 +13,12 @@ import type {
   ScenarioType,
 } from "@shared/types";
 
-const api = axios.create({ baseURL: "/api", timeout: 30000 });
+// In dev the Vite proxy serves /api; in production set VITE_API_BASE_URL to the
+// backend origin (e.g. https://plan-b-api.onrender.com) — no trailing slash.
+const api = axios.create({
+  baseURL: (import.meta.env.VITE_API_BASE_URL ?? "") + "/api",
+  timeout: 30000,
+});
 
 function unwrap<T>(payload: ApiSuccess<T> | ApiError): T {
   if (payload.success) return payload.data;
