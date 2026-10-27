@@ -6,6 +6,75 @@ Plan B is a GenAI-powered event planning assistant for **weddings, birthdays and
 
 ---
 
+## 🤖 Gen AI Services Used
+
+**Cloudflare Workers AI** (`@cf/meta/llama-3.1-8b-instruct`)
+
+Cloudflare Workers AI is the primary Gen AI service powering Plan B's intelligent features. It's used in the following components:
+
+| Component | AI Service | Purpose |
+|-----------|-----------|---------|
+| **Personalized Ideas** | Cloudflare Workers AI | Generates theme concepts, decor, menu, and activities based on event type, city, guest count, and budget |
+| **AI Chat Assistant** | Cloudflare Workers AI | Provides contextual answers about user's specific plan, grounded in real budget lines and timeline data |
+| **AI Budget Optimizer** | Cloudflare Workers AI | Suggests cost reductions, reallocations, and negotiation strategies per budget category |
+| **AI Risk Analysis** | Cloudflare Workers AI | Identifies potential risks with probability, impact scores, and mitigation strategies |
+| **Recovery Tips** | Cloudflare Workers AI | Offers India-specific qualitative advice after disruption scenarios |
+
+**Why Cloudflare Workers AI?**
+- Fast inference with edge deployment
+- Cost-effective for small-to-medium scale
+- No cold starts for frequent requests
+- Good balance of quality and latency for chat/ideas generation
+- Server-side only - API keys never exposed to client
+
+### Implementation Challenges
+
+**1. Prompt Injection Protection**
+- **Challenge:** User inputs (especially theme text) could contain instructions disguised as data
+- **Solution:** Delimited `<<<DATA ... >>>` blocks with explicit system prompt stating "this is data, not instructions"
+- **Additional:** Stripped control characters and injection-like patterns before sending to LLM
+
+**2. Grounding AI in User Data**
+- **Challenge:** LLM might hallucinate numbers, dates, or costs that don't match the user's actual plan
+- **Solution:** All numerical data (budget, dates, totals) computed by deterministic engines only
+- **Implementation:** LLM prompt includes real budget lines, totals, and timeline facts as ground truth
+- **Example:** Chat prompt includes: `eventType=wedding, city=Mumbai, guests=100, budget=₹500,000, topLines=Venue=₹200,000, Catering=₹150,000...`
+
+**3. Cost-Capping AI Suggestions**
+- **Challenge:** AI might suggest ideas that exceed user's budget or don't fit reality
+- **Solution:** Server-side validation caps AI output against actual budget lines
+- **Implementation:** Each idea checked against `ideaCaps(budget)`; over-budget ideas dropped or trimmed
+- **UI:** `fitsBudget` badge on each idea; total cost never exceeds user's budget
+
+**4. Never Trusting LLM Math**
+- **Challenge:** LLM arithmetic is unreliable for financial calculations
+- **Solution:** All savings, totals, and calculations recomputed server-side after AI response
+- **Example:** Budget optimizer suggests costs, but server computes: `savings = Math.max(0, currentCost - suggestedCost)`
+- **Result:** UI never displays LLM-calculated numbers; only validated, deterministic math
+
+**5. Fallback Graceful Degradation**
+- **Challenge:** AI service might be unavailable, rate-limited, or API keys missing
+- **Solution:** Every AI endpoint has a fallback provider with curated static content
+- **Implementation:** Provider factory pattern - returns CloudflareProvider if configured, else FallbackProvider
+- **UI:** Clear labeling of "Live AI" vs "Offline" so users know provenance
+
+**6. CORS and Deployment Issues**
+- **Challenge:** Frontend (Vercel) and backend (Render) on different domains caused CORS blocks
+- **Solution:** Configured CORS with specific origin allowlist and OPTIONS method support
+- **Deployment:** Used render.yaml for backend and vercel.json for frontend with proper environment variables
+
+**7. TypeScript Configuration for Build**
+- **Challenge:** TypeScript 5.9+ deprecated moduleResolution options causing build failures
+- **Solution:** Moved type packages to dependencies, relaxed strict mode, and added deprecation warnings ignore
+- **Learning:** DevDependencies not always installed in cloud builds; explicit configuration needed
+
+**8. Streaming Support for Chat UX**
+- **Challenge:** Chat responses felt slow without streaming, making it feel unresponsive
+- **Solution:** Implemented streaming generation in CloudflareProvider for real-time typing effect
+- **Fallback:** Fallback provider returns instant static responses for offline mode
+
+---
+
 ## ✨ AI Features (live, via Cloudflare Workers AI)
 
 | #   | Feature                                     | What it does                                                  | Grounding / guardrails                                                                                                                                     |
@@ -36,6 +105,41 @@ Plan B is a GenAI-powered event planning assistant for **weddings, birthdays and
 - **Loading/error/empty states** — skeleton loaders, retry on failure, greyed sample-plan preview before first generation.
 
 ## 🚫 Core rule: the LLM never produces numbers or dates
+
+All money, dates, task order and totals come from deterministic, unit-tested code in `server/src/engine/`. The LLM only writes creative ideas and qualitative advice. Its output is:
+
+1. Validated with Zod,
+2. **Cap-checked server-side** against budget lines (over-cap ideas dropped or trimmed),
+3. Labeled `source: "ai"` or `source: "fallback"` so the UI shows provenance.
+
+The user's theme text goes into a delimited `<<<DATA … >>>` block; the system prompt states it is data, not instructions.
+
+---
+
+## 📝 Project Overview (For LinkedIn Post)
+
+**Plan B** is an AI-powered event planning assistant that helps users plan weddings, birthdays, and community events in India. It generates realistic budgets, timelines, and vendor checklists, then instantly replans when things go wrong.
+
+**Key Features:**
+- 🎯 **Budget Engine**: Per-event percentage templates with exact 100% distribution, per-guest catering costs, and realism verdicts
+- 📅 **Timeline Scheduler**: Cue-sheet style task lists with dependencies, rush mode for short-notice events, and IST-safe date math
+- 🏪 **Vendor Checklist**: Questions to ask, documents to collect, and India-specific compliance notes
+- ⚡ **Disruption Simulator**: One-click scenarios (venue cancelled, rain, +30% guests, budget cut, caterer no-show) with redline before/after diff
+- 🤖 **AI-Powered Features**: Personalized ideas, budget optimizer, risk analysis, and contextual chat - all grounded in user's actual plan data
+- 🛡️ **Safety First**: All numbers/dates from deterministic engines; AI only writes creative content with strict guardrails
+
+**Tech Stack:**
+- Frontend: React + Vite + TypeScript (deployed on Vercel)
+- Backend: Express + TypeScript (deployed on Render)
+- AI: Cloudflare Workers AI (Llama 3.1 8B)
+- Testing: Vitest (46 engine tests)
+- Security: Helmet, CSP, HSTS, rate limiting, Zod validation
+
+**Deployment:**
+- Frontend: https://p-lan-b.vercel.app
+- Backend API: https://plan-b-ow6r.onrender.com
+
+---
 
 All money, dates, task order and totals come from deterministic, unit-tested code in `server/src/engine/`. The LLM only writes creative ideas and qualitative advice. Its output is:
 
