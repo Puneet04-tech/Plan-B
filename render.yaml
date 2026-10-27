@@ -27,7 +27,7 @@ services:
       # Comma-separated origin allowlist; add your Vercel URL after the first
       # deploy. Wildcard `*` allows any origin (demo mode only).
       - key: ALLOWED_ORIGIN
-        value: http://localhost:5173
+        value: http://localhost:5173,https://plan-b.vercel.app
       # Live AI — set these in the Render dashboard (Secret Files / env):
       # CLOUDFLARE_API_TOKEN: <your token>
       # CLOUDFLARE_ACCOUNT_ID: <your account id>

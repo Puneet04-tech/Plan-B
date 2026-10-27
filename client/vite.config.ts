@@ -22,6 +22,9 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  define: {
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || 'https://plan-b-ow6r.onrender.com'),
+  },
   test: {
     globals: true,
     environment: 'jsdom',

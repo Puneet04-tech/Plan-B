@@ -5,6 +5,9 @@
   "installCommand": "npm install --prefix client",
   "framework": null,
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "env": {
+    "VITE_API_BASE_URL": "https://plan-b-ow6r.onrender.com"
+  },
   "headers": [
     {
       "source": "/(.*)",
