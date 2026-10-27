@@ -7,16 +7,17 @@ import type { IdeasResponse } from '@shared/types';
 import { t, type Lang } from './lib/i18n';
 import { useTheme } from './lib/theme';
 import EventForm from './components/EventForm';
+import Landing from './components/Landing';
 import StatCards from './components/StatCards';
 import ResultTabs from './components/ResultTabs';
 import PlanBPanel from './components/PlanBPanel';
 import AIChat from './components/AIChat';
 import BudgetOptimizer from './components/BudgetOptimizer';
 
-type TopTab = 'planner' | 'simulator';
+type TopTab = 'landing' | 'planner' | 'simulator';
 
 const App = () => {
-  const [topTab, setTopTab] = useState<TopTab>('planner');
+  const [topTab, setTopTab] = useState<TopTab>('landing');
   const [lang, setLang] = useState<Lang>('en');
   const [theme, toggleTheme] = useTheme();
   const strings = t(lang);
@@ -126,7 +127,8 @@ const App = () => {
           role="tabpanel"
           aria-labelledby={`top-tab-${topTab}`}
         >
-          {topTab === 'planner' ? (
+          {topTab === 'landing' && <Landing onGetStarted={() => setTopTab('planner')} />}
+          {topTab === 'planner' && (
             <div className="layout">
               <div className="form-panel">
                 <EventForm onGenerate={generate} disabled={loading} strings={strings} />
@@ -160,9 +162,8 @@ const App = () => {
                 )}
               </div>
             </div>
-          ) : (
-            <PlanBPanel plan={plan} />
           )}
+          {topTab === 'simulator' && <PlanBPanel plan={plan} />}
 
           <AIChat plan={plan} />
         </div>
