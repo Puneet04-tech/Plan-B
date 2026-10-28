@@ -1,7 +1,6 @@
 "use strict";
 
 import { z } from "zod";
-import { RecoveryTipsSchema } from "./recovery";
 
 /** Zod schema for one chat assistant reply. */
 export const ChatReplySchema = z.object({

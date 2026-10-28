@@ -16,12 +16,12 @@ interface VendorRecommendation {
 }
 
 interface Props {
-  planData?: any;
+  planData?: Record<string, unknown>;
   onContactVendor?: (vendor: VendorRecommendation) => void;
 }
 
-const VendorAI = ({ planData, onContactVendor }: Props) => {
-  const [recommendations, setRecommendations] = useState<VendorRecommendation[]>([
+const VendorAI = ({ planData: _planData, onContactVendor }: Props) => {
+  const [recommendations] = useState<VendorRecommendation[]>([
     {
       id: '1',
       name: 'Royal Cuisine Catering',
@@ -125,7 +125,7 @@ const VendorAI = ({ planData, onContactVendor }: Props) => {
           <label>Sort by:</label>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'match' | 'rating' | 'cost')}
             className="filter-select"
           >
             <option value="match">AI Match Score</option>

@@ -10,11 +10,6 @@ import DisruptionPanel from './DisruptionPanel';
 import BudgetOptimizer from './BudgetOptimizer';
 import RiskAnalysis from './RiskAnalysis';
 
-interface Tab {
-  id: string;
-  label: string;
-}
-
 const TABS: Array<{ id: string; labelKey?: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab'; label?: string; accent?: boolean }> = [
   { id: 'overview', labelKey: 'overview' },
   { id: 'budget', labelKey: 'budgetTab' },

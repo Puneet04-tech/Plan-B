@@ -22,7 +22,6 @@
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
     "alwaysStrict": false,
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@shared/*": ["../shared/*"]
     }

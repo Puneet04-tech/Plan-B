@@ -48,12 +48,6 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
     setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'var(--ok)';
-    if (confidence >= 0.6) return 'var(--highlight)';
-    return 'var(--accent)';
-  };
-
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'reduce':

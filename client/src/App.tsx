@@ -12,7 +12,6 @@ import StatCards from './components/StatCards';
 import ResultTabs from './components/ResultTabs';
 import PlanBPanel from './components/PlanBPanel';
 import AIChat from './components/AIChat';
-import BudgetOptimizer from './components/BudgetOptimizer';
 
 type TopTab = 'landing' | 'planner' | 'simulator';
 

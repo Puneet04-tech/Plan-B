@@ -8,7 +8,7 @@ import type {
   PlanBundle,
   ScenarioType,
 } from '@shared/types';
-import { buildBudget, BUDGET_TEMPLATES } from './budget';
+import { BUDGET_TEMPLATES } from './budget';
 import { buildTimeline, parseEventDate } from './scheduler';
 import { RUSH_PREMIUM, TRIM_ORDER } from '../data/ranges';
 

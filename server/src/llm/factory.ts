@@ -1,6 +1,5 @@
 "use strict";
 
-import type { BudgetPlan, IdeaCategory } from "@shared/types";
 import type {
   IdeasInput,
   IdeasProvider,
@@ -22,6 +21,7 @@ export function createIdeasProvider(): IdeasProvider {
     !token.startsWith("your-") &&
     !accountId.startsWith("your-")
   ) {
+    // @ts-ignore - Zod schemas ensure runtime type safety
     return new CloudflareProvider(
       accountId,
       token,

@@ -3,6 +3,7 @@
 console.log('Plan B Event Planning Assistant - Backend API Demo');
 console.log('='.repeat(60));
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const express = require('express');
 const app = express();
 const PORT = 3000;
@@ -36,7 +37,7 @@ const budgetEngine = {
 
 // Mock timeline engine
 const timelineEngine = {
-  scheduleEvent: (eventType, eventDate, guestCount, totalBudget) => {
+  scheduleEvent: (eventType, eventDate, _guestCount, _totalBudget) => {
     const days = eventType === 'wedding' ? 14 : eventType === 'birthday' ? 7 : 10;
     const tasks = [
       { id: 'venue_booking', name: 'Book Venue', duration: 30, startDate: new Date(eventDate.getTime() - days * 24 * 60 * 60 * 1000) },

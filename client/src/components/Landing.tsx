@@ -42,7 +42,7 @@ const Landing = ({ onGetStarted }: Props) => {
           birthdays and community events — then replans instantly when something goes wrong.
         </p>
         <button className="btn btn-primary hero-cta" onClick={onGetStarted}>
-          Start planning — it's free
+          Start planning &mdash; it&apos;s free
         </button>
         <p className="hero-note">No sign-up. Runs entirely on your machine.</p>
       </div>

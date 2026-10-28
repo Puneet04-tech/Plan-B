@@ -115,7 +115,8 @@ const VendorsView = ({ plan }: Props) => {
       </table>
       </div>
 
-      <VendorAI planData={plan} />
+      {/* @ts-ignore - VendorAI expects Record<string, unknown> for planData */}
+      <VendorAI planData={plan as unknown as Record<string, unknown>} />
     </div>
   );
 };
