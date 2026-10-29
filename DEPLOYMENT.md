@@ -13,7 +13,7 @@ Plan B is deployed as **two pieces**:
 
 1. Push this repo to GitHub.
 2. In Render: **New → Blueprint**, select the repo. `render.yaml` at the root defines the `plan-b-api` Node service (build: `cd server && npm ci --include=dev && npm run build`, start: `cd server && npm start`, health check `/api/health`).
-   - `--include=dev` matters: `tsc`, `vitest` and the type packages are devDependencies, and Render sets `NODE_ENV=production`, which would otherwise skip them at build time.
+   - `--include=dev` keeps the toolchain available; the build also works with a plain production install because `typescript` and the `@types/*` packages are runtime dependencies. Render sets `NODE_ENV=production`, which skips devDependencies during install.
 3. In the service's **Environment** tab add:
    - `ALLOWED_ORIGIN` = your Vercel URL + localhost, comma-separated, e.g.
      `https://plan-b.vercel.app,http://localhost:5173`
