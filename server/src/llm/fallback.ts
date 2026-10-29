@@ -1,14 +1,7 @@
 "use strict";
 
-import type {
-  Ideas,
-  IdeaCategory,
-} from "@shared/types";
-import type {
-  IdeasInput,
-  IdeasProvider,
-  IdeasProviderResult,
-} from "./provider";
+import type { Ideas, IdeaCategory } from "@shared/types";
+import type { IdeasInput, IdeasProvider, IdeasProviderResult } from "./provider";
 
 interface FallbackTemplate {
   title: string;
@@ -55,8 +48,7 @@ const FALLBACKS: Record<string, FallbackTemplate[]> = {
     },
     {
       title: "Games corner",
-      description:
-        "2–3 traditional games with small prizes keep guests engaged cheaply.",
+      description: "2–3 traditional games with small prizes keep guests engaged cheaply.",
       shareOfCap: 0.3,
     },
   ],
@@ -85,12 +77,7 @@ const THEME_CONCEPTS: Record<string, string> = {
 export class FallbackProvider implements IdeasProvider {
   async generate(input: IdeasInput): Promise<IdeasProviderResult> {
     const items: Ideas["items"] = [];
-    const categories: IdeaCategory[] = [
-      "decor",
-      "menu",
-      "activities",
-      "entertainment",
-    ];
+    const categories: IdeaCategory[] = ["decor", "menu", "activities", "entertainment"];
     const cityNote = input.city ? ` tuned for ${input.city}` : "";
     for (const category of categories) {
       const cap = input.caps[category] ?? 0;
@@ -112,8 +99,7 @@ export class FallbackProvider implements IdeasProvider {
       }
     }
     const ideas: Ideas = {
-      themeConcept:
-        THEME_CONCEPTS[input.eventType] ?? "A memorable celebration",
+      themeConcept: THEME_CONCEPTS[input.eventType] ?? "A memorable celebration",
       items,
     };
     return { ideas, source: "fallback" };
@@ -124,8 +110,8 @@ export class FallbackProvider implements IdeasProvider {
     void _eventType;
     return [
       `Act on "${scenarioLabel}" immediately: confirm replacements in writing before announcing anything to guests.`,
-      'Assign one decision-maker for the disrupted vendor category so messages stay consistent.',
-      'Update the vendor checklist notes and inform affected vendors the same day.',
+      "Assign one decision-maker for the disrupted vendor category so messages stay consistent.",
+      "Update the vendor checklist notes and inform affected vendors the same day.",
     ];
   }
 }

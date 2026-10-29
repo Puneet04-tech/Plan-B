@@ -1,24 +1,30 @@
 "use strict";
 
-import { useMemo, useState } from 'react';
-import type { IdeasResponse, PlanBundle } from '@shared/types';
-import BudgetView from './BudgetView';
-import TimelineView from './TimelineView';
-import VendorsView from './VendorsView';
-import IdeasView from './IdeasView';
-import DisruptionPanel from './DisruptionPanel';
-import BudgetOptimizer from './BudgetOptimizer';
-import RiskAnalysis from './RiskAnalysis';
+import { useMemo, useState } from "react";
+import type { IdeasResponse, PlanBundle } from "@shared/types";
+import BudgetView from "./BudgetView";
+import TimelineView from "./TimelineView";
+import VendorsView from "./VendorsView";
+import IdeasView from "./IdeasView";
+import DisruptionPanel from "./DisruptionPanel";
+import BudgetOptimizer from "./BudgetOptimizer";
+import RiskAnalysis from "./RiskAnalysis";
 
-const TABS: Array<{ id: string; labelKey?: 'overview' | 'budgetTab' | 'timelineTab' | 'vendorsTab' | 'ideasTab' | 'planbTab'; label?: string; accent?: boolean }> = [
-  { id: 'overview', labelKey: 'overview' },
-  { id: 'budget', labelKey: 'budgetTab' },
-  { id: 'optimizer', label: '✨ AI Optimizer' },
-  { id: 'timeline', labelKey: 'timelineTab' },
-  { id: 'vendors', labelKey: 'vendorsTab' },
-  { id: 'risk', label: '🛡 Risk Analysis' },
-  { id: 'ideas', labelKey: 'ideasTab' },
-  { id: 'planb', labelKey: 'planbTab', accent: true },
+const TABS: Array<{
+  id: string;
+  labelKey?:
+    "overview" | "budgetTab" | "timelineTab" | "vendorsTab" | "ideasTab" | "planbTab";
+  label?: string;
+  accent?: boolean;
+}> = [
+  { id: "overview", labelKey: "overview" },
+  { id: "budget", labelKey: "budgetTab" },
+  { id: "optimizer", label: "✨ AI Optimizer" },
+  { id: "timeline", labelKey: "timelineTab" },
+  { id: "vendors", labelKey: "vendorsTab" },
+  { id: "risk", label: "🛡 Risk Analysis" },
+  { id: "ideas", labelKey: "ideasTab" },
+  { id: "planb", labelKey: "planbTab", accent: true },
 ];
 
 interface Props {
@@ -36,7 +42,7 @@ interface Props {
 }
 
 const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
-  const [active, setActive] = useState('overview');
+  const [active, setActive] = useState("overview");
 
   const panels = useMemo(
     () => ({
@@ -54,10 +60,10 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
 
   const onKeyDown = (e: React.KeyboardEvent, index: number) => {
     let nextIndex: number | null = null;
-    if (e.key === 'ArrowRight') nextIndex = (index + 1) % TABS.length;
-    else if (e.key === 'ArrowLeft') nextIndex = (index - 1 + TABS.length) % TABS.length;
-    else if (e.key === 'Home') nextIndex = 0;
-    else if (e.key === 'End') nextIndex = TABS.length - 1;
+    if (e.key === "ArrowRight") nextIndex = (index + 1) % TABS.length;
+    else if (e.key === "ArrowLeft") nextIndex = (index - 1 + TABS.length) % TABS.length;
+    else if (e.key === "Home") nextIndex = 0;
+    else if (e.key === "End") nextIndex = TABS.length - 1;
     if (nextIndex !== null) {
       e.preventDefault();
       setActive(TABS[nextIndex].id);
@@ -99,20 +105,34 @@ const ResultTabs = ({ plan, ideas, onPlanUpdate, strings }: Props) => {
 const Overview = ({ plan }: { plan: PlanBundle }) => (
   <div className="card">
     <h2>Overview</h2>
-    <p style={{ color: 'var(--muted)', margin: '0.5rem 0 1rem' }}>
-      {plan.setup.eventType} · {plan.setup.city} · {plan.setup.guests} guests ·{' '}
-      {new Date(`${plan.setup.eventDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+    <p style={{ color: "var(--muted)", margin: "0.5rem 0 1rem" }}>
+      {plan.setup.eventType} · {plan.setup.city} · {plan.setup.guests} guests ·{" "}
+      {new Date(`${plan.setup.eventDate}T00:00:00`).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })}
     </p>
     {plan.timeline.rushMode && (
-      <p className="chip chip-alert" role="status" style={{ marginBottom: '1rem', display: 'inline-block' }}>
+      <p
+        className="chip chip-alert"
+        role="status"
+        style={{ marginBottom: "1rem", display: "inline-block" }}
+      >
         {plan.timeline.rushMessage}
       </p>
     )}
-    <p style={{ color: 'var(--ink)' }}><strong>Realism:</strong> {plan.budget.realism.reason}</p>
-    <p style={{ marginTop: '0.5rem', color: 'var(--ink)' }}><strong>Critical path:</strong> {plan.timeline.criticalPathLabel}</p>
-    <p style={{ marginTop: '0.5rem', color: 'var(--ink)' }}>
-      <strong>Vendor checklist:</strong> {plan.vendors.items.length} vendors across {new Set(plan.vendors.items.map((v) => v.category)).size} categories.
-      Items marked <span className="chip chip-alert">backup</span> are high-risk and need a backup vendor.
+    <p style={{ color: "var(--ink)" }}>
+      <strong>Realism:</strong> {plan.budget.realism.reason}
+    </p>
+    <p style={{ marginTop: "0.5rem", color: "var(--ink)" }}>
+      <strong>Critical path:</strong> {plan.timeline.criticalPathLabel}
+    </p>
+    <p style={{ marginTop: "0.5rem", color: "var(--ink)" }}>
+      <strong>Vendor checklist:</strong> {plan.vendors.items.length} vendors across{" "}
+      {new Set(plan.vendors.items.map((v) => v.category)).size} categories. Items marked{" "}
+      <span className="chip chip-alert">backup</span> are high-risk and need a backup
+      vendor.
     </p>
   </div>
 );

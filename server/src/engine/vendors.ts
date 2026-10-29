@@ -1,11 +1,6 @@
 "use strict";
 
-import type {
-  BudgetPlan,
-  EventType,
-  VendorItem,
-  VendorPlan,
-} from "@shared/types";
+import type { BudgetPlan, EventType, VendorItem, VendorPlan } from "@shared/types";
 import { VENDOR_TEMPLATES } from "../data/vendors";
 
 /**
@@ -13,10 +8,7 @@ import { VENDOR_TEMPLATES } from "../data/vendors";
  * budget line it maps to, split across the items that share the same line.
  * If no budget plan is provided, costs default to 0 and the UI shows "TBD".
  */
-export function buildVendorPlan(
-  eventType: EventType,
-  budget?: BudgetPlan,
-): VendorPlan {
+export function buildVendorPlan(eventType: EventType, budget?: BudgetPlan): VendorPlan {
   const templates = VENDOR_TEMPLATES[eventType];
   if (!templates) {
     return { items: [] };

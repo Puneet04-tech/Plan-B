@@ -1,6 +1,6 @@
 "use strict";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 interface Props {
   onTranscript: (text: string) => void;
@@ -40,15 +40,19 @@ declare global {
   }
 }
 
-const VoiceInput = ({ onTranscript, className = '' }: Props) => {
+const VoiceInput = ({ onTranscript, className = "" }: Props) => {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     // Check if browser supports Web Speech API
-    if (typeof window !== 'undefined' && !('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    if (
+      typeof window !== "undefined" &&
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
       setIsSupported(false);
       return;
     }
@@ -59,7 +63,7 @@ const VoiceInput = ({ onTranscript, className = '' }: Props) => {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -70,8 +74,8 @@ const VoiceInput = ({ onTranscript, className = '' }: Props) => {
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        let finalTranscript = "";
+        let interimTranscript = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
@@ -91,7 +95,7 @@ const VoiceInput = ({ onTranscript, className = '' }: Props) => {
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
+        console.error("Speech recognition error:", event.error);
         setIsListening(false);
       };
 
@@ -111,7 +115,7 @@ const VoiceInput = ({ onTranscript, className = '' }: Props) => {
     if (isListening) {
       recognitionRef.current?.stop();
     } else {
-      setTranscript('');
+      setTranscript("");
       recognitionRef.current?.start();
     }
   };
@@ -126,20 +130,16 @@ const VoiceInput = ({ onTranscript, className = '' }: Props) => {
   }
 
   return (
-    <div className={`voice-input ${isListening ? 'listening' : ''} ${className}`}>
+    <div className={`voice-input ${isListening ? "listening" : ""} ${className}`}>
       <button
         onClick={toggleListening}
         className="voice-button"
-        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-        title={isListening ? 'Stop listening' : 'Start voice input'}
+        aria-label={isListening ? "Stop listening" : "Start voice input"}
+        title={isListening ? "Stop listening" : "Start voice input"}
       >
-        <span className="voice-icon">{isListening ? '🔴' : '🎤'}</span>
+        <span className="voice-icon">{isListening ? "🔴" : "🎤"}</span>
       </button>
-      {transcript && (
-        <div className="transcript-display">
-          {transcript}
-        </div>
-      )}
+      {transcript && <div className="transcript-display">{transcript}</div>}
       {isListening && (
         <div className="listening-indicator">
           <span></span>

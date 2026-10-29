@@ -12,7 +12,8 @@ Plan B is deployed as **two pieces**:
 ## 1. Deploy the API to Render
 
 1. Push this repo to GitHub.
-2. In Render: **New → Blueprint**, select the repo. `render.yaml` at the root defines the `plan-b-api` Node service (build: `cd server && npm ci && npm run build`, start: `cd server && npm start`, health check `/api/health`).
+2. In Render: **New → Blueprint**, select the repo. `render.yaml` at the root defines the `plan-b-api` Node service (build: `cd server && npm ci --include=dev && npm run build`, start: `cd server && npm start`, health check `/api/health`).
+   - `--include=dev` matters: `tsc`, `vitest` and the type packages are devDependencies, and Render sets `NODE_ENV=production`, which would otherwise skip them at build time.
 3. In the service's **Environment** tab add:
    - `ALLOWED_ORIGIN` = your Vercel URL + localhost, comma-separated, e.g.
      `https://plan-b.vercel.app,http://localhost:5173`
@@ -53,8 +54,11 @@ Plan B is deployed as **two pieces**:
 ## Local development (unchanged)
 
 ```bash
-cd server && npm run dev     # API on :3000
-cd client && npm run dev     # UI on :5173 — Vite proxies /api, no env needed
+npm run dev:server   # API on :3000
+npm run dev:client   # UI on :5173 — Vite proxies /api, no env needed
 ```
+
+The same commands exist inside each package (`npm run dev --prefix server`).
+Before pushing, run `npm run verify` — it is exactly what CI runs.
 
 `VITE_API_BASE_URL` is only needed for production builds; leave it unset locally.

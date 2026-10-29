@@ -210,7 +210,7 @@ export interface IdeasResponse {
 
 // --- AI feature payloads (chat, optimizer, risk) ------------------------------
 
-export type SuggestionType = 'reduce' | 'reallocate' | 'negotiate';
+export type SuggestionType = "reduce" | "reallocate" | "negotiate";
 
 export interface BudgetSuggestion {
   category: string;
@@ -223,8 +223,8 @@ export interface BudgetSuggestion {
   fitsBudget: boolean;
 }
 
-export type RiskCategory = 'budget' | 'timeline' | 'vendor' | 'weather' | 'logistics';
-export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type RiskCategory = "budget" | "timeline" | "vendor" | "weather" | "logistics";
+export type RiskSeverity = "low" | "medium" | "high" | "critical";
 
 export interface RiskFactor {
   category: RiskCategory;
@@ -234,10 +234,6 @@ export interface RiskFactor {
   impact: number;
   severity: RiskSeverity;
   mitigation: string;
-}
-
-export interface SourceTagged<T> {
-  source: 'ai' | 'fallback';
 }
 
 // --- API envelopes -----------------------------------------------------------

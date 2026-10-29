@@ -26,18 +26,12 @@ function unwrap<T>(payload: ApiSuccess<T> | ApiError): T {
 }
 
 export async function fetchPlan(request: PlanRequest): Promise<PlanBundle> {
-  const res = await api.post<ApiSuccess<PlanBundle> | ApiError>(
-    "/plan",
-    request,
-  );
+  const res = await api.post<ApiSuccess<PlanBundle> | ApiError>("/plan", request);
   return unwrap<PlanBundle>(res.data);
 }
 
 export async function fetchIdeas(request: PlanRequest): Promise<IdeasResponse> {
-  const res = await api.post<ApiSuccess<IdeasResponse> | ApiError>(
-    "/ideas",
-    request,
-  );
+  const res = await api.post<ApiSuccess<IdeasResponse> | ApiError>("/ideas", request);
   return unwrap<IdeasResponse>(res.data);
 }
 
@@ -45,16 +39,16 @@ export async function fetchDisruption(
   plan: PlanBundle,
   scenario: ScenarioType,
 ): Promise<DisruptionResult> {
-  const res = await api.post<ApiSuccess<DisruptionResult> | ApiError>(
-    "/disrupt",
-    { plan, scenario },
-  );
+  const res = await api.post<ApiSuccess<DisruptionResult> | ApiError>("/disrupt", {
+    plan,
+    scenario,
+  });
   return unwrap<DisruptionResult>(res.data);
 }
 
 export interface RecoveryTipsResponse {
   tips: string[];
-  source: 'ai' | 'fallback';
+  source: "ai" | "fallback";
 }
 
 export async function fetchRecoveryTips(
@@ -62,7 +56,7 @@ export async function fetchRecoveryTips(
   eventType: string,
 ): Promise<RecoveryTipsResponse> {
   const res = await api.post<ApiSuccess<RecoveryTipsResponse> | ApiError>(
-    '/recovery-tips',
+    "/recovery-tips",
     { scenario: scenarioLabel, eventType },
   );
   return unwrap<RecoveryTipsResponse>(res.data);
@@ -70,31 +64,45 @@ export async function fetchRecoveryTips(
 
 export interface ChatResponse {
   reply: string;
-  source: 'ai' | 'fallback';
+  source: "ai" | "fallback";
 }
 
-export async function fetchChat(message: string, plan?: PlanBundle): Promise<ChatResponse> {
-  const res = await api.post<ApiSuccess<ChatResponse> | ApiError>('/chat', { message, plan });
+export async function fetchChat(
+  message: string,
+  plan?: PlanBundle,
+): Promise<ChatResponse> {
+  const res = await api.post<ApiSuccess<ChatResponse> | ApiError>("/chat", {
+    message,
+    plan,
+  });
   return unwrap<ChatResponse>(res.data);
 }
 
 export interface BudgetOptimizerResponse {
   suggestions: BudgetSuggestion[];
-  source: 'ai' | 'fallback';
+  source: "ai" | "fallback";
 }
 
-export async function fetchBudgetOptimizer(plan: PlanBundle): Promise<BudgetOptimizerResponse> {
-  const res = await api.post<ApiSuccess<BudgetOptimizerResponse> | ApiError>('/ai/budget-optimizer', { plan });
+export async function fetchBudgetOptimizer(
+  plan: PlanBundle,
+): Promise<BudgetOptimizerResponse> {
+  const res = await api.post<ApiSuccess<BudgetOptimizerResponse> | ApiError>(
+    "/ai/budget-optimizer",
+    { plan },
+  );
   return unwrap<BudgetOptimizerResponse>(res.data);
 }
 
 export interface RiskAnalysisResponse {
   risks: RiskFactor[];
-  source: 'ai' | 'fallback';
+  source: "ai" | "fallback";
 }
 
 export async function fetchRiskAnalysis(plan: PlanBundle): Promise<RiskAnalysisResponse> {
-  const res = await api.post<ApiSuccess<RiskAnalysisResponse> | ApiError>('/ai/risk-analysis', { plan });
+  const res = await api.post<ApiSuccess<RiskAnalysisResponse> | ApiError>(
+    "/ai/risk-analysis",
+    { plan },
+  );
   return unwrap<RiskAnalysisResponse>(res.data);
 }
 

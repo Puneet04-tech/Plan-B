@@ -54,23 +54,20 @@ export function useVendorChecklist(vendors: VendorPlan | undefined) {
     );
   }, [vendors]);
 
-  const update = useCallback(
-    (id: string, patch: Partial<VendorChecklistItem>) => {
-      setItems((prev) => {
-        const next = prev.map((i) => (i.id === id ? { ...i, ...patch } : i));
-        const stored: StoredStatus = {};
-        for (const i of next)
-          stored[i.id] = {
-            status: i.status,
-            contacted: i.contacted,
-            notes: i.notes,
-          };
-        saveVendorStatus(stored);
-        return next;
-      });
-    },
-    [],
-  );
+  const update = useCallback((id: string, patch: Partial<VendorChecklistItem>) => {
+    setItems((prev) => {
+      const next = prev.map((i) => (i.id === id ? { ...i, ...patch } : i));
+      const stored: StoredStatus = {};
+      for (const i of next)
+        stored[i.id] = {
+          status: i.status,
+          contacted: i.contacted,
+          notes: i.notes,
+        };
+      saveVendorStatus(stored);
+      return next;
+    });
+  }, []);
 
   return { items, update, storageAvailable };
 }

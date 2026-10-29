@@ -1,8 +1,8 @@
 "use strict";
 
-import { useEffect, useState } from 'react';
-import type { BudgetSuggestion, PlanBundle } from '@shared/types';
-import { fetchBudgetOptimizer } from '../lib/api';
+import { useCallback, useEffect, useState } from "react";
+import type { BudgetSuggestion, PlanBundle } from "@shared/types";
+import { fetchBudgetOptimizer } from "../lib/api";
 
 interface DisplaySuggestion extends BudgetSuggestion {
   id: string;
@@ -16,10 +16,10 @@ interface Props {
 const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
   const [suggestions, setSuggestions] = useState<DisplaySuggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState<'ai' | 'fallback'>('fallback');
+  const [source, setSource] = useState<"ai" | "fallback">("fallback");
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!plan?.budget) return;
     setLoading(true);
     setError(null);
@@ -28,16 +28,15 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
       setSource(res.source);
       setSuggestions(res.suggestions.map((s, i) => ({ ...s, id: `${s.category}-${i}` })));
     } catch {
-      setError('Could not load AI optimizations. Please retry.');
+      setError("Could not load AI optimizations. Please retry.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [plan]);
 
   useEffect(() => {
     if (plan?.budget) void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan?.budget.total, plan?.setup.eventType]);
+  }, [load, plan?.budget]);
 
   const totalSavings = suggestions.reduce((sum, s) => sum + s.savings, 0);
 
@@ -50,30 +49,44 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'reduce':
-        return '↓';
-      case 'reallocate':
-        return '↔';
-      case 'negotiate':
-        return '💬';
+      case "reduce":
+        return "↓";
+      case "reallocate":
+        return "↔";
+      case "negotiate":
+        return "💬";
       default:
-        return '•';
+        return "•";
     }
   };
 
   return (
     <div className="card budget-optimizer">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
         <h2>AI Budget Optimizer</h2>
-        <div className="chip" style={{ background: 'var(--pill-bg)', color: 'var(--pill-ink)' }}>
-          {loading ? 'Analyzing…' : source === 'ai' ? 'Live AI' : 'Offline suggestions'}
+        <div
+          className="chip"
+          style={{ background: "var(--pill-bg)", color: "var(--pill-ink)" }}
+        >
+          {loading ? "Analyzing…" : source === "ai" ? "Live AI" : "Offline suggestions"}
         </div>
       </div>
 
       {error && (
-        <div role="alert" style={{ color: 'var(--accent)', marginBottom: '1rem' }}>
-          {error}{' '}
-          <button className="btn btn-ghost" style={{ width: 'auto', minHeight: 32 }} onClick={() => void load()}>
+        <div role="alert" style={{ color: "var(--accent)", marginBottom: "1rem" }}>
+          {error}{" "}
+          <button
+            className="btn btn-ghost"
+            style={{ width: "auto", minHeight: 32 }}
+            onClick={() => void load()}
+          >
             Retry
           </button>
         </div>
@@ -82,7 +95,9 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
       <div className="optimizer-summary">
         <div className="summary-item">
           <div className="summary-label">Potential Savings</div>
-          <div className="summary-value highlight">₹{totalSavings.toLocaleString('en-IN')}</div>
+          <div className="summary-value highlight">
+            ₹{totalSavings.toLocaleString("en-IN")}
+          </div>
         </div>
         <div className="summary-item">
           <div className="summary-label">Suggestions</div>
@@ -103,15 +118,19 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
             <div className="suggestion-costs">
               <div className="cost-item">
                 <span className="cost-label">Current:</span>
-                <span className="cost-value">₹{suggestion.currentCost.toLocaleString('en-IN')}</span>
+                <span className="cost-value">
+                  ₹{suggestion.currentCost.toLocaleString("en-IN")}
+                </span>
               </div>
               <div className="cost-arrow">→</div>
               <div className="cost-item">
                 <span className="cost-label">Suggested:</span>
-                <span className="cost-value highlight">₹{suggestion.suggestedCost.toLocaleString('en-IN')}</span>
+                <span className="cost-value highlight">
+                  ₹{suggestion.suggestedCost.toLocaleString("en-IN")}
+                </span>
               </div>
               <div className="cost-savings">
-                Save ₹{suggestion.savings.toLocaleString('en-IN')}
+                Save ₹{suggestion.savings.toLocaleString("en-IN")}
               </div>
             </div>
 
@@ -120,7 +139,7 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
             <button
               className="btn btn-primary btn-sm"
               onClick={() => handleApply(suggestion)}
-              style={{ marginTop: '1rem', width: 'auto' }}
+              style={{ marginTop: "1rem", width: "auto" }}
             >
               Apply Suggestion
             </button>
@@ -130,7 +149,11 @@ const BudgetOptimizer = ({ plan, onApplyOptimization }: Props) => {
 
       {suggestions.length === 0 && !loading && !error && (
         <div className="empty-state">
-          <p>{source === 'ai' ? 'All optimizations applied! Your budget is now optimized.' : 'No suggestions available right now.'}</p>
+          <p>
+            {source === "ai"
+              ? "All optimizations applied! Your budget is now optimized."
+              : "No suggestions available right now."}
+          </p>
         </div>
       )}
     </div>

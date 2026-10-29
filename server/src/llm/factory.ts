@@ -1,10 +1,7 @@
 "use strict";
 
-import type {
-  IdeasInput,
-  IdeasProvider,
-  IdeasProviderResult,
-} from "./provider";
+import type { IdeasInput, IdeasProvider, IdeasProviderResult } from "./provider";
+
 import { CloudflareProvider } from "./cloudflare";
 import { FallbackProvider } from "./fallback";
 
@@ -15,18 +12,12 @@ import { FallbackProvider } from "./fallback";
 export function createIdeasProvider(): IdeasProvider {
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  if (
-    token &&
-    accountId &&
-    !token.startsWith("your-") &&
-    !accountId.startsWith("your-")
-  ) {
-    // @ts-ignore - Zod schemas ensure runtime type safety
-    return new CloudflareProvider(
-      accountId,
-      token,
-      process.env.CLOUDFLARE_AI_MODEL,
-    );
+  const isConfigured =
+    Boolean(token && accountId) &&
+    !token?.startsWith("your-") &&
+    !accountId?.startsWith("your-");
+  if (isConfigured && token && accountId) {
+    return new CloudflareProvider(accountId, token, process.env.CLOUDFLARE_AI_MODEL);
   }
   return new FallbackProvider();
 }

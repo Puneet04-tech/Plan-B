@@ -165,8 +165,7 @@ const VENDOR_TEMPLATES: Record<EventType, VendorTemplate[]> = {
         "Advance receipt",
         "Cancellation policy in writing",
       ],
-      advancePaymentGuidance:
-        "25–40% advance; get cancellation terms in writing",
+      advancePaymentGuidance: "25–40% advance; get cancellation terms in writing",
       confirmLeadDays: 60,
       riskLevel: "high",
       needsBackup: true,

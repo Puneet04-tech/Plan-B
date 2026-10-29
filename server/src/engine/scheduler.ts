@@ -7,6 +7,13 @@ import type {
   TaskCriticality,
   TimelinePlan,
 } from "@shared/types";
+import {
+  DAY_MS,
+  daysBetween,
+  formatDisplayDate,
+  toIstIso,
+  tryParseIstDate,
+} from "../lib/dates";
 
 export class SchedulerError extends Error {
   constructor(message: string) {
@@ -15,50 +22,15 @@ export class SchedulerError extends Error {
   }
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** IST offset: UTC+5:30 in minutes. All arithmetic stays in UTC millis. */
-const IST_OFFSET_MINUTES = 330;
-
-/** Convert a UTC-millis timestamp to an ISO date string truncated to the IST calendar day. */
-function toIstIso(ms: number): string {
-  const ist = new Date(ms + IST_OFFSET_MINUTES * 60 * 1000);
-  return ist.toISOString().slice(0, 10);
-}
-
-/** Format a UTC-millis timestamp as a human date in IST, e.g. "6 Nov 2026". */
-function formatDisplayDate(ms: number): string {
-  const ist = new Date(ms + IST_OFFSET_MINUTES * 60 * 1000);
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${ist.getUTCDate()} ${months[ist.getUTCMonth()]} ${ist.getUTCFullYear()}`;
-}
-
 /** Parse a yyyy-mm-dd string as midnight IST, returned as UTC millis. */
 export function parseEventDate(iso: string): number {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m)
+  const ms = tryParseIstDate(iso);
+  if (Number.isNaN(ms)) {
     throw new SchedulerError(
-      `Invalid date format: ${iso} (expected yyyy-mm-dd)`,
+      `Invalid date: ${iso} (expected a real calendar date as yyyy-mm-dd)`,
     );
-  const [, y, mo, d] = m;
-  // Midnight IST == previous day 18:30 UTC.
-  return (
-    Date.UTC(Number(y), Number(mo) - 1, Number(d)) -
-    IST_OFFSET_MINUTES * 60 * 1000
-  );
+  }
+  return ms;
 }
 
 const CRITICALITY_ORDER: Record<TaskCriticality, number> = {
@@ -401,15 +373,12 @@ export function buildTimeline(
   today: number,
 ): TimelinePlan {
   const template = TASK_TEMPLATES[eventType];
-  if (!template)
-    throw new SchedulerError(`Unsupported event type: ${eventType}`);
+  if (!template) throw new SchedulerError(`Unsupported event type: ${eventType}`);
 
   const eventMs = parseEventDate(eventDateIso);
-  const todayIstDay = toIstIso(today);
+  const todayMs = parseEventDate(toIstIso(today));
 
-  const daysAvailable = Math.round(
-    (eventMs - parseEventDate(todayIstDay)) / DAY_MS,
-  );
+  const daysAvailable = daysBetween(todayMs, eventMs);
   if (daysAvailable < 0) {
     throw new SchedulerError(`Event date ${eventDateIso} is in the past`);
   }
@@ -427,7 +396,7 @@ export function buildTimeline(
     const offsetDays = Math.round(t.leadDays * scale);
     let due = eventMs - offsetDays * DAY_MS;
     // Never schedule before "today".
-    if (due < parseEventDate(todayIstDay)) due = parseEventDate(todayIstDay);
+    if (due < todayMs) due = todayMs;
     raw.set(t.id, due);
   }
 
@@ -453,8 +422,7 @@ export function buildTimeline(
   const ordered = [...template].sort((a, b) => {
     const d = raw.get(a.id)! - raw.get(b.id)!;
     if (d !== 0) return d;
-    const c =
-      CRITICALITY_ORDER[a.criticality] - CRITICALITY_ORDER[b.criticality];
+    const c = CRITICALITY_ORDER[a.criticality] - CRITICALITY_ORDER[b.criticality];
     if (c !== 0) return c;
     return template.indexOf(a) - template.indexOf(b);
   });
@@ -507,13 +475,9 @@ export function buildTimeline(
 
   const tasks: ScheduledTask[] = ordered.map((t) => {
     const due = raw.get(t.id)!;
-    const dayDiff = Math.round((due - parseEventDate(todayIstDay)) / DAY_MS);
+    const dayDiff = daysBetween(todayMs, due);
     const status: ScheduledTask["status"] =
-      dayDiff < 0
-        ? "overdue"
-        : dayDiff <= SOON_WINDOW_DAYS
-          ? "due-soon"
-          : "upcoming";
+      dayDiff < 0 ? "overdue" : dayDiff <= SOON_WINDOW_DAYS ? "due-soon" : "upcoming";
     return {
       id: t.id,
       title: t.title,
@@ -539,5 +503,6 @@ export function buildTimeline(
   };
 }
 
-// Suppress unused-var lint for helpers intentionally exported for tests.
-export { toIstIso, formatDisplayDate, SOON_WINDOW_DAYS };
+// Re-exported for the disruption engine and tests; the implementations live
+// in one place (`server/src/lib/dates.ts`).
+export { formatDisplayDate, toIstIso, DAY_MS, SOON_WINDOW_DAYS };

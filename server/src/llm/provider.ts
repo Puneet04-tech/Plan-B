@@ -29,6 +29,8 @@ export interface IdeasProvider {
   generateStream?(input: IdeasInput): AsyncGenerator<string, void, unknown>;
   recoveryTips?(scenarioLabel: string, eventType: string): Promise<string[]>;
   chat?(userMessage: string, planSummary: string): Promise<string>;
-  optimizeBudget?(budgetSummary: string): Promise<{ suggestions: Array<Omit<BudgetSuggestion, 'savings' | 'fitsBudget'>> }>;
+  optimizeBudget?(
+    budgetSummary: string,
+  ): Promise<{ suggestions: Array<Omit<BudgetSuggestion, "savings" | "fitsBudget">> }>;
   analyzeRisks?(planSummary: string): Promise<{ risks: RiskFactor[] }>;
 }

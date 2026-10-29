@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildBudget } from "../server/src/engine/budget";
-import { buildTimeline } from "../server/src/engine/scheduler";
-import { buildVendorPlan } from "../server/src/engine/vendors";
-import { applyScenario } from "../server/src/engine/disruptions";
-import type { EventType, PlanBundle, ScenarioType } from "../shared/types";
+import { buildBudget } from "../src/engine/budget";
+import { buildTimeline } from "../src/engine/scheduler";
+import { buildVendorPlan } from "../src/engine/vendors";
+import { applyScenario } from "../src/engine/disruptions";
+import type { EventType, PlanBundle, ScenarioType } from "../../shared/types";
 
 const TODAY = Date.UTC(2026, 9, 25);
 const types: EventType[] = ["wedding", "birthday", "community"];
@@ -15,11 +15,7 @@ const scenarios: ScenarioType[] = [
   "vendor-no-show-caterer",
 ];
 
-function makePlan(
-  eventType: EventType,
-  guests = 100,
-  budget = 500000,
-): PlanBundle {
+function makePlan(eventType: EventType, guests = 100, budget = 500000): PlanBundle {
   const eventDate = "2026-12-25";
   const b = buildBudget(eventType, guests, budget);
   return {
@@ -74,9 +70,7 @@ describe("disruption engine", () => {
 
   it("guest-count-up-30 scales catering and warns on venue capacity", () => {
     const plan = makePlan("birthday");
-    const cateringBefore = plan.budget.lines.find(
-      (l) => l.key === "catering",
-    )!.amount;
+    const cateringBefore = plan.budget.lines.find((l) => l.key === "catering")!.amount;
     const result = applyScenario(plan, "guest-count-up-30", TODAY);
     const cateringAfter = result.plan.budget.lines.find(
       (l) => l.key === "catering",
@@ -89,13 +83,8 @@ describe("disruption engine", () => {
     for (const scenario of scenarios) {
       const result = applyScenario(makePlan("wedding"), scenario, TODAY);
       expect(result.diff.label.length).toBeGreaterThan(0);
-      const allChanges = [
-        ...result.diff.budgetChanges,
-        ...result.diff.taskChanges,
-      ];
-      expect(allChanges.length > 0 || result.diff.addedTasks.length > 0).toBe(
-        true,
-      );
+      const allChanges = [...result.diff.budgetChanges, ...result.diff.taskChanges];
+      expect(allChanges.length > 0 || result.diff.addedTasks.length > 0).toBe(true);
       for (const change of result.diff.budgetChanges) {
         expect(change.reason.length).toBeGreaterThan(3);
       }
@@ -108,9 +97,7 @@ describe("vendor plan", () => {
     const plan = makePlan(eventType);
     expect(plan.vendors.items.length).toBeGreaterThan(3);
     for (const item of plan.vendors.items) {
-      expect(plan.budget.lines.some((l) => l.key === item.budgetKey)).toBe(
-        true,
-      );
+      expect(plan.budget.lines.some((l) => l.key === item.budgetKey)).toBe(true);
       if (item.budgetKey === "venue" || item.budgetKey === "catering") {
         expect(item.needsBackup).toBe(true);
       }
@@ -119,9 +106,7 @@ describe("vendor plan", () => {
 
   it("community includes compliance note", () => {
     const plan = makePlan("community");
-    const security = plan.vendors.items.find(
-      (i) => i.budgetKey === "permitsSecurity",
-    );
+    const security = plan.vendors.items.find((i) => i.budgetKey === "permitsSecurity");
     expect(security?.complianceNote).toContain("Check your local rules");
   });
 });

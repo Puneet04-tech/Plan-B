@@ -33,9 +33,12 @@ app.use(
   }),
 );
 
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   if (process.env.NODE_ENV !== "development") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains; preload",
+    );
   }
   next();
 });
@@ -45,7 +48,10 @@ app.use(
     // Comma-separated allowlist; wildcard `*` matches any origin (demo mode).
     origin: (origin, cb) => {
       const raw = process.env.ALLOWED_ORIGIN ?? "*";
-      const allowed = raw.split(",").map((s) => s.trim()).filter(Boolean);
+      const allowed = raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (allowed.includes("*") || !origin || allowed.includes(origin)) {
         cb(null, true);
       } else {
@@ -54,7 +60,9 @@ app.use(
     },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    // The API is anonymous and cookie-free, so cross-origin credentials are
+    // never allowed. Re-enable this only together with a real auth scheme.
+    credentials: false,
     maxAge: 86400,
   }),
 );
@@ -78,20 +86,15 @@ const disruptLimiter = rateLimit({
 app.use("/api/ideas", ideasLimiter);
 app.use("/api/disrupt", disruptLimiter);
 
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
+// Health, plan, disruption and AI routes all live under /api.
 app.use("/api", planRoutes);
 
 // 404 before error handler; no stack traces or secrets in responses.
 app.use((req: express.Request, res: express.Response) => {
-  res
-    .status(404)
-    .json({
-      success: false,
-      error: `Route ${req.method} ${req.path} not found`,
-    });
+  res.status(404).json({
+    success: false,
+    error: `Route ${req.method} ${req.path} not found`,
+  });
 });
 
 app.use(

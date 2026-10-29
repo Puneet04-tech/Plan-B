@@ -1,40 +1,40 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
 # Environment variables
 .env
 **/.env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
-# Dependencies
+# Build output
 dist/
-node_modules/
+**/dist/
+*.tsbuildinfo
+
+# Test / tooling caches
+coverage/
+**/coverage/
+.vite/
+**/.vite/
+.vitest/
+*.log
+npm-debug.log*
+
+# Editor and OS files
 .vscode/
 .idea/
 .DS_Store
-
-# IDE
-.vscode/
-.idea/
+Thumbs.db
 *.swp
 *.swo
-
-# Logs
-*.log
 
 # Temporary files
 temp/
 *.tmp
-
-# Build outputs
-client/dist/
-server/dist/
-coverage/
-
-# Python backup
 *.bak
 *.pyc
 
-# Vite cache.vite/
-dist/
-*.local
+# Vercel / Render local state
+.vercel/

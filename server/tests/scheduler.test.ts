@@ -4,10 +4,9 @@ import {
   parseEventDate,
   SchedulerError,
   TASK_TEMPLATES,
-} from "../server/src/engine/scheduler";
-import type { EventType } from "../shared/types";
+} from "../src/engine/scheduler";
+import type { EventType } from "../../shared/types";
 
-const DAY = 24 * 60 * 60 * 1000;
 // 2026-10-25 00:00 UTC as "today"
 const TODAY = Date.UTC(2026, 9, 25);
 
@@ -31,22 +30,19 @@ describe("scheduler", () => {
     },
   );
 
-  it.each(types)(
-    "%s: prerequisites never due after dependents",
-    (eventType) => {
-      const tl = buildTimeline(eventType, "2027-01-15", TODAY);
-      const byId = new Map(tl.tasks.map((t) => [t.id, t]));
-      for (const template of TASK_TEMPLATES[eventType]) {
-        for (const dep of template.dependsOn) {
-          const depTask = byId.get(dep)!;
-          const own = byId.get(template.id)!;
-          expect(new Date(depTask.dueDate).getTime()).toBeLessThanOrEqual(
-            new Date(own.dueDate).getTime(),
-          );
-        }
+  it.each(types)("%s: prerequisites never due after dependents", (eventType) => {
+    const tl = buildTimeline(eventType, "2027-01-15", TODAY);
+    const byId = new Map(tl.tasks.map((t) => [t.id, t]));
+    for (const template of TASK_TEMPLATES[eventType]) {
+      for (const dep of template.dependsOn) {
+        const depTask = byId.get(dep)!;
+        const own = byId.get(template.id)!;
+        expect(new Date(depTask.dueDate).getTime()).toBeLessThanOrEqual(
+          new Date(own.dueDate).getTime(),
+        );
       }
-    },
-  );
+    }
+  });
 
   it("rush mode triggers at 12 days and not at 90", () => {
     const event12 = "2026-11-06"; // 12 days after TODAY
@@ -60,9 +56,7 @@ describe("scheduler", () => {
   });
 
   it("rejects past event dates with a typed error", () => {
-    expect(() => buildTimeline("wedding", "2026-01-01", TODAY)).toThrow(
-      SchedulerError,
-    );
+    expect(() => buildTimeline("wedding", "2026-01-01", TODAY)).toThrow(SchedulerError);
   });
 
   it("results are sorted by due date", () => {
@@ -97,8 +91,6 @@ describe("scheduler", () => {
 
   it("parses IST dates correctly", () => {
     const ms = parseEventDate("2026-11-06");
-    expect(new Date(ms + 330 * 60 * 1000).toISOString()).toBe(
-      "2026-11-06T00:00:00.000Z",
-    );
+    expect(new Date(ms + 330 * 60 * 1000).toISOString()).toBe("2026-11-06T00:00:00.000Z");
   });
 });

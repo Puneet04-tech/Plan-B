@@ -13,8 +13,9 @@ services:
     name: plan-b-api
     runtime: node
     plan: free
-    # The API lives in server/ — install deps and start from there.
-    buildCommand: cd server && npm install && npm run build
+    # The API lives in server/ — install deps (dev deps included: tsc needs
+    # them) and build from there.
+    buildCommand: cd server && npm ci --include=dev && npm run build
     startCommand: cd server && npm start
     healthCheckPath: /api/health
     autoDeploy: true

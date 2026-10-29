@@ -1,8 +1,8 @@
 "use strict";
 
-import { useEffect, useState } from 'react';
-import type { PlanBundle, RiskFactor as SharedRiskFactor } from '@shared/types';
-import { fetchRiskAnalysis } from '../lib/api';
+import { useCallback, useEffect, useState } from "react";
+import type { PlanBundle, RiskFactor as SharedRiskFactor } from "@shared/types";
+import { fetchRiskAnalysis } from "../lib/api";
 
 type DisplayRisk = SharedRiskFactor & { id: string };
 
@@ -13,10 +13,10 @@ interface Props {
 const RiskAnalysis = ({ plan }: Props) => {
   const [risks, setRisks] = useState<DisplayRisk[]>([]);
   const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState<'ai' | 'fallback'>('fallback');
+  const [source, setSource] = useState<"ai" | "fallback">("fallback");
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!plan?.budget) return;
     setLoading(true);
     setError(null);
@@ -25,71 +25,103 @@ const RiskAnalysis = ({ plan }: Props) => {
       setSource(res.source);
       setRisks(res.risks.map((r, i) => ({ ...r, id: `risk-${i}` })));
     } catch {
-      setError('Could not load AI risk analysis. Please retry.');
+      setError("Could not load AI risk analysis. Please retry.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [plan]);
 
   useEffect(() => {
     if (plan?.budget) void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan?.setup.eventDate, plan?.setup.guests, plan?.budget.total]);
+  }, [load, plan?.budget]);
 
-  const [filterSeverity, setFilterSeverity] = useState<string>('all');
+  const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
-  const filteredRisks = risks.filter(r =>
-    filterSeverity === 'all' || r.severity === filterSeverity
+  const filteredRisks = risks.filter(
+    (r) => filterSeverity === "all" || r.severity === filterSeverity,
   );
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'var(--accent)';
-      case 'high': return '#FF6B6B';
-      case 'medium': return 'var(--highlight)';
-      case 'low': return 'var(--ok)';
-      default: return 'var(--muted)';
+      case "critical":
+        return "var(--accent)";
+      case "high":
+        return "#FF6B6B";
+      case "medium":
+        return "var(--highlight)";
+      case "low":
+        return "var(--ok)";
+      default:
+        return "var(--muted)";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'critical': return '🔴';
-      case 'high': return '🟠';
-      case 'medium': return '🟡';
-      case 'low': return '🟢';
-      default: return '⚪';
+      case "critical":
+        return "🔴";
+      case "high":
+        return "🟠";
+      case "medium":
+        return "🟡";
+      case "low":
+        return "🟢";
+      default:
+        return "⚪";
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'budget': return '💰';
-      case 'timeline': return '📅';
-      case 'vendor': return '👥';
-      case 'weather': return '🌤';
-      case 'logistics': return '🚚';
-      default: return '📋';
+      case "budget":
+        return "💰";
+      case "timeline":
+        return "📅";
+      case "vendor":
+        return "👥";
+      case "weather":
+        return "🌤";
+      case "logistics":
+        return "🚚";
+      default:
+        return "📋";
     }
   };
 
-  const overallRiskScore = risks.reduce((sum, r) => sum + (r.probability * r.impact), 0) / risks.length;
-  const criticalCount = risks.filter(r => r.severity === 'critical').length;
-  const highCount = risks.filter(r => r.severity === 'high').length;
+  const overallRiskScore =
+    risks.reduce((sum, r) => sum + r.probability * r.impact, 0) / risks.length;
+  const criticalCount = risks.filter((r) => r.severity === "critical").length;
+  const highCount = risks.filter((r) => r.severity === "high").length;
 
   return (
     <div className="card risk-analysis">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
         <h2>AI Risk Analysis</h2>
-        <div className="chip" style={{ background: 'var(--pill-bg)', color: 'var(--pill-ink)' }}>
-          {loading ? 'Analyzing…' : `${source === 'ai' ? 'Live AI · ' : 'Offline · '}${risks.length} risks`}
+        <div
+          className="chip"
+          style={{ background: "var(--pill-bg)", color: "var(--pill-ink)" }}
+        >
+          {loading
+            ? "Analyzing…"
+            : `${source === "ai" ? "Live AI · " : "Offline · "}${risks.length} risks`}
         </div>
       </div>
 
       {error && (
-        <div role="alert" style={{ color: 'var(--accent)', marginBottom: '1rem' }}>
-          {error}{' '}
-          <button className="btn btn-ghost" style={{ width: 'auto', minHeight: 32 }} onClick={() => void load()}>
+        <div role="alert" style={{ color: "var(--accent)", marginBottom: "1rem" }}>
+          {error}{" "}
+          <button
+            className="btn btn-ghost"
+            style={{ width: "auto", minHeight: 32 }}
+            onClick={() => void load()}
+          >
             Retry
           </button>
         </div>
@@ -98,19 +130,30 @@ const RiskAnalysis = ({ plan }: Props) => {
       <div className="risk-summary">
         <div className="summary-card">
           <div className="summary-label">Overall Risk Score</div>
-          <div className="summary-value" style={{ color: getSeverityColor(overallRiskScore > 0.5 ? 'high' : overallRiskScore > 0.3 ? 'medium' : 'low') }}>
+          <div
+            className="summary-value"
+            style={{
+              color: getSeverityColor(
+                overallRiskScore > 0.5
+                  ? "high"
+                  : overallRiskScore > 0.3
+                    ? "medium"
+                    : "low",
+              ),
+            }}
+          >
             {(overallRiskScore * 100).toFixed(0)}%
           </div>
         </div>
         <div className="summary-card">
           <div className="summary-label">Critical Risks</div>
-          <div className="summary-value" style={{ color: 'var(--accent)' }}>
+          <div className="summary-value" style={{ color: "var(--accent)" }}>
             {criticalCount}
           </div>
         </div>
         <div className="summary-card">
           <div className="summary-label">High Priority</div>
-          <div className="summary-value" style={{ color: '#FF6B6B' }}>
+          <div className="summary-value" style={{ color: "#FF6B6B" }}>
             {highCount}
           </div>
         </div>
@@ -137,9 +180,14 @@ const RiskAnalysis = ({ plan }: Props) => {
             <div className="risk-header">
               <div className="risk-category">
                 <span className="category-icon">{getCategoryIcon(risk.category)}</span>
-                <span className="category-name">{risk.category.charAt(0).toUpperCase() + risk.category.slice(1)}</span>
+                <span className="category-name">
+                  {risk.category.charAt(0).toUpperCase() + risk.category.slice(1)}
+                </span>
               </div>
-              <div className="risk-severity" style={{ color: getSeverityColor(risk.severity) }}>
+              <div
+                className="risk-severity"
+                style={{ color: getSeverityColor(risk.severity) }}
+              >
                 <span className="severity-icon">{getSeverityIcon(risk.severity)}</span>
                 <span className="severity-label">{risk.severity.toUpperCase()}</span>
               </div>
@@ -154,9 +202,14 @@ const RiskAnalysis = ({ plan }: Props) => {
                 <div className="metric-bar">
                   <div
                     className="metric-fill"
-                    style={{ width: `${risk.probability * 100}%`, background: getSeverityColor(risk.severity) }}
+                    style={{
+                      width: `${risk.probability * 100}%`,
+                      background: getSeverityColor(risk.severity),
+                    }}
                   />
-                  <span className="metric-value">{(risk.probability * 100).toFixed(0)}%</span>
+                  <span className="metric-value">
+                    {(risk.probability * 100).toFixed(0)}%
+                  </span>
                 </div>
               </div>
               <div className="metric">
@@ -164,7 +217,10 @@ const RiskAnalysis = ({ plan }: Props) => {
                 <div className="metric-bar">
                   <div
                     className="metric-fill"
-                    style={{ width: `${risk.impact * 100}%`, background: getSeverityColor(risk.severity) }}
+                    style={{
+                      width: `${risk.impact * 100}%`,
+                      background: getSeverityColor(risk.severity),
+                    }}
                   />
                   <span className="metric-value">{(risk.impact * 100).toFixed(0)}%</span>
                 </div>
@@ -175,7 +231,7 @@ const RiskAnalysis = ({ plan }: Props) => {
               <strong>Mitigation:</strong> {risk.mitigation}
             </div>
 
-            {source === 'ai' && (
+            {source === "ai" && (
               <div className="ai-badge">
                 <span>✨ AI-Generated</span>
               </div>
@@ -186,7 +242,11 @@ const RiskAnalysis = ({ plan }: Props) => {
 
       {filteredRisks.length === 0 && !loading && (
         <div className="empty-state">
-          <p>{error ? 'Fix the error above and retry.' : 'No risks found for this filter. Try selecting a different severity level.'}</p>
+          <p>
+            {error
+              ? "Fix the error above and retry."
+              : "No risks found for this filter. Try selecting a different severity level."}
+          </p>
         </div>
       )}
     </div>

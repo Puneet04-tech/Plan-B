@@ -1,0 +1,43 @@
+{
+  "name": "plan-b",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plan B — an AI event planning assistant that builds a realistic budget, timeline and vendor checklist, then replans when things go wrong.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Puneet04-tech/Plan-B.git"
+  },
+  "homepage": "https://p-lan-b.vercel.app",
+  "bugs": {
+    "url": "https://github.com/Puneet04-tech/Plan-B/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "event-planning",
+    "budget",
+    "timeline",
+    "typescript",
+    "react",
+    "express",
+    "cloudflare-workers-ai"
+  ],
+  "scripts": {
+    "setup": "npm ci --prefix server && npm ci --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "test": "npm run test --prefix server && npm run test --prefix client",
+    "test:coverage": "npm run test:coverage --prefix server",
+    "lint": "npm run lint --prefix server && npm run lint --prefix client",
+    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
+  }
+}
