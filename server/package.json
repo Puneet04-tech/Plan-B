@@ -39,7 +39,7 @@
     "nodemon": "^3.0.0",
     "prettier": "^3.9.10",
     "tsx": "^4.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^5.0.5"
   },
   "keywords": [
     "event-planning",
